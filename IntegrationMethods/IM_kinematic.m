@@ -26,7 +26,7 @@ X_k(1) = X(1);
 % Calculate velocities and positions using 1D kinematic equations
 for i = 2:n
     V_k(i) = V_k(i-1) + A(i)*dt;
-    X_k(i) = X_k(i-1) + V_k(i)*dt - 0.5*A(i)*dt^2;
+    X_k(i) = X_k(i-1) + V_k(i)*dt + 0.5*A(i)*dt^2;
 end
 
 end

@@ -13,9 +13,9 @@ clear
 clc
 
 %% Analytical Data
-t1 = 0;                     % Start time (s)
-t2 = 0.2;                   % End time (s)
-n = 500;                    % Number of data points
+t1 = 0;                     % Start time
+t2 = 0.2;                   % End time
+n = 400;                    % Number of data points
 dt = (t2-t1)/n;             % Time step
 t = linspace(t1, t2, n);    % n times from t1 to t1
 
@@ -70,6 +70,6 @@ ylabel({'Position','$\mathbf{m}$'},'interpreter', 'latex');
 plot(t,X)
 plot(t,state(1,:))
 plot(t,X_k)
-% plot(t, X_o);
+plot(t, X_o);
 legend('Truth', 'KF', 'Kinematics', 'Omega')
 hold off
