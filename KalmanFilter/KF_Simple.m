@@ -70,6 +70,6 @@ ylabel({'Position','$\mathbf{m}$'},'interpreter', 'latex');
 plot(t,X)
 plot(t,state(1,:))
 plot(t,X_k)
-plot(t, X_o);
+% plot(t, X_o);
 legend('Truth', 'KF', 'Kinematics', 'Omega')
 hold off
