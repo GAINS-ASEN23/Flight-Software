@@ -36,8 +36,8 @@ V_o = real(V_o(1:n));
 X_o = real(X_o(1:n));
 
 %% Kalman Filter
-% sigma_std = 13.892443989449804;
-sigma_std = 5;
+sigma_std = 13.892443989449804;
+% sigma_std = 5;
 P_n_n = [0.1 0 0; 0 1 0; 0 0 0];
 state = KF_accel(A, sigma_std, P_n_n, dt);
 
@@ -70,6 +70,6 @@ ylabel({'Position','$\mathbf{m}$'},'interpreter', 'latex');
 plot(t,X)
 plot(t,state(1,:))
 plot(t,X_k)
-plot(t, X_o);
+% plot(t, X_o);
 legend('Truth', 'KF', 'Kinematics', 'Omega')
 hold off
