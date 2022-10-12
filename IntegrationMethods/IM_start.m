@@ -9,7 +9,7 @@ clear all; close all; clc
 %% Analytical Data
 t1 = 0;                     % Start time
 t2 = 0.2;                   % End time
-n = 400;                    % Number of data points
+n = 40000;                    % Number of data points
 dt = (t2-t1)/n;             % Time step
 t = linspace(t1, t2, n);    % n times from t1 to t1
 
@@ -25,6 +25,9 @@ t = linspace(t1, t2, n);    % n times from t1 to t1
 fs = n/(t2-t1);
 
 [V_o, X_o] = IM_omega(A,t,fs);
+
+%% Adams-Bashforth
+
 
 %% Unit Conversion
 V = V .* 1E3;       % m/s -> mm/s
