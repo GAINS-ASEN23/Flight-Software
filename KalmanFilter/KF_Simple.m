@@ -8,9 +8,16 @@
 %                      10/11/2022                         %
 %                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Last edited: Bennett Grow 10/14/22
+%   Added IM to session path
+%   Changed legend location
+
 %% Set Environment
 clear
 clc
+parent = fileparts(cd);
+addpath(string(parent) + '\IntegrationMethods');
 
 %% Analytical Data
 t1 = 0;                     % Start time
@@ -61,7 +68,7 @@ plot(t,V)
 plot(t,state(2,:))
 plot(t,V_k)
 plot(t, V_o);
-legend('Truth', 'KF', 'Kinematics', 'Omega')
+legend('Truth', 'KF', 'Kinematics', 'Omega','Location','eastoutside')
 hold off
 
 nexttile
@@ -71,5 +78,5 @@ plot(t,X)
 plot(t,state(1,:))
 plot(t,X_k)
 % plot(t, X_o);
-legend('Truth', 'KF', 'Kinematics', 'Omega')
+legend('Truth', 'KF', 'Kinematics', 'Omega','Location','eastoutside')
 hold off

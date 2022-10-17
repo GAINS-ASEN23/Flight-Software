@@ -11,7 +11,6 @@ REFERENCES:
 % Preallocate vectors
 n = length(A);
 N = 2*n;
-% A = [A zeros(1,n)];  % Pad with zeros
 k = 1:N;
 
 % Remove mean of A
@@ -46,8 +45,8 @@ yV = ifft(YV);
 yX = ifft(YX);
 
 % Remove mean and detrend
-yV = yV - mean(yV);
-yX = yX - mean(yX);
+% yV = yV - mean(yV);
+% yX = yX - mean(yX);
 
 % yV = detrend(yV);
 % yX = detrend(yX);

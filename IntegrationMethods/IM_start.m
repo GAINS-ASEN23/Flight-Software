@@ -9,7 +9,7 @@ clear all; close all; clc
 %% Analytical Data
 t1 = 0;                     % Start time
 t2 = 0.2;                   % End time
-n = 40000;                    % Number of data points
+n = 400;                    % Number of data points
 dt = (t2-t1)/n;             % Time step
 t = linspace(t1, t2, n);    % n times from t1 to t1
 
@@ -61,6 +61,7 @@ plot(t,V)
 plot(t,V_k)
 plot(t,V_o)
 yline(0)
+legend('Truth','Kinematic','Omega','Location','eastoutside')
 hold off
 
 nexttile
@@ -70,6 +71,7 @@ plot(t,X)
 plot(t,X_k)
 plot(t,X_o)
 yline(0)
+legend('Truth','Kinematic','Omega','Location','eastoutside')
 hold off
 
 
