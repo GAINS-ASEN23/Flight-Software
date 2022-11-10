@@ -1,5 +1,5 @@
 // Include Libraries
-#include "CControl/src/CControl/Headers/Functions.h"
+#include "CControl/Headers/Functions.h"
 
 int main()
 {
