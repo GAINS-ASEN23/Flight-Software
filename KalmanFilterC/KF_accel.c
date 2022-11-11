@@ -1,133 +1,76 @@
 // Include Libraries
 #include "CControl/Headers/Functions.h"
+//#include "KF_accel.h"
 
 int main()
 {
-    // ***** defining constants (incoming from accelerometers)*****
-    // Acceleration data in [m/s^2]  QUESTION 1: This isn't going to be coming in directly in m/s^2, should we account for that for FLOPS sake and shouldn't populating the A matrix not be included??
-    uint16_t ASize = 6;
-    float A[ASize]; // does float take up more space then let's say float
-    for(int i = 0; i < ASize; i++) // should I take populating it out for FLOPS sake (wouldn't be on flight software) wasn't sure if not populating it would be a problem
-    {
-        A[i] = 9.81;
-    }
 
-    // std (we determine for acceleroemter beforehand) QUESTION: this is for error associated in each accelerometer correct?
-    float sigma_std[ASize];
-    for(int i = 0; i < ASize; i++)
-    {
-        sigma_std[i] = 13;
-    }
+    // struct State KF;
 
+     float dt = 1/100; //seconds
 
-    // time step (100 hz) check value
-    float dt = 1/100; //seconds
+     uint16_t ASize = 6;
+     uint16_t StateSize = 25;
 
-    // Pnn Would we populate this ourselves (I think yes so leave for flops sake)
-    uint16_t StateSize = 25; // is this correct??
-    float P_n_n[StateSize][StateSize];
-    for(int i = 0; i < StateSize; i++) // should I take populating it out for FLOPS sake (wouldn't be on flight software) wasn't sure if not populating it would be a problem
-    {
-        for(int j = 0; j < StateSize; j++)
-        {
-            if(i == j)
-            {
-                P_n_n[i][j] = 2.23; // lol
-            }
-            else
-            {
-                P_n_n[i][j] = 0;
-            }
-        }
-    }
-
-    // state at time step n and definind U_n(check size) Is there more involved with U
-    // QUESTION: Should I be coming for loops like the one above and below could be combined (would that help with FLOPS)
-    float X_n_n[StateSize]; // also known as state
-    float U_n[StateSize];
-    for(int i = 0; i < StateSize; i++) // same question as ealier here but what calculations are actually involved in our code (I think this stays to some extent, co7uld even need more)
-    {
-        if(i < ASize)
-        {
-            X_n_n[i] = A[i];
-        }
-        else
-        {
-            X_n_n[i] = 0;
-        }
-
-        U_n[i] = 0;
-    }
-
-    //prealocating some vectors **again could combinme??
-    float X_n_n_m_1[StateSize];
-    float P_n_n_m_1[StateSize][StateSize];
-    float G[StateSize][StateSize]; // control matrix
-    for(int i = 0; i < StateSize; i++)
-    {
-        for(int j = 0; j < StateSize; j++)
-        {
-            P_n_n_m_1[i][j] = 0;
-            G[i][j] = 0;
-        }
-
-        X_n_n_m_1[i] = 0;
-        
-    }
-
-    // Defining State Transition matrix 
-    // QUESTION: does the contents of this affect the flops (I think yes) as in having x*t^2 +2 is more flops then just defining it as 1
-    float F[StateSize][StateSize];
-    float FTran[StateSize][StateSize];
-    for(int i = 0; i < StateSize; i++)
-    {
-        for(int j = 0; j < StateSize; j++)
-        {
-            F[i][j] = dt*dt; // just did this to get more flops (could fill in different estimate)
-            FTran[i][j] = dt*dt;
-        }
-    }
-    // get F transpose from F
-    tran(FTran, StateSize, StateSize);
+     float A[ASize]; //
+     float sigma_std[ASize];
+     float P_n_n[StateSize*StateSize];
+     float X_n_n[StateSize]; // also known as state
+     float U_n[StateSize];
+     float X_n_n_m_1[StateSize];
+     float P_n_n_m_1[StateSize*StateSize];
+     float G[StateSize*StateSize]; // control matrix
+     float F[StateSize*StateSize];
+     float FTran[StateSize*StateSize];
+     float H[StateSize];
+     float HTran[StateSize];
+     float Q_meas[StateSize*StateSize]; 
+     float R_n[ASize*ASize];
 
 
-    // Observation matrix
-    float H[StateSize];
-    float HTran[StateSize];
-    for(int i = 0; i < StateSize; i++) // same question as ealier here but what calculations are actually involved in our code (I think this stays to some extent, co7uld even need more)
-    {
-        if(i < ASize)
-        {
-            H[i] = 1; // assuming no scale factor
-            HTran[i] = 1;
-        }
-        else
-        {
-            H[i] = 0;
-            HTran[i] = 0;
-        }
-    }
-    tran(HTran, 1, StateSize);
-
-    // Measurement uncertiniy matrix
-    //uint16_t RSize = ASize; 
-    float R_n[ASize][ASize];
     
-     
+    for(int j = 0; j < ASize; j++)
+    {
+        A[j] = 1; //pre-allocating sensor data from each accelerometer
+        sigma_std[j] = 1; // pre-allocating error (std) from each acelerometer
+    }
+        
+
+
+     for(int i = 0; i < StateSize; i++)
+     {
+        U_n[i] = 1; 
+        X_n_n_m_1[i] = 1; // predicted state
+
+     }
+
+     for(int i = 0; i < StateSize + ASize; i ++)
+     {
+        H[i] = 1; //observation matrix (conversions happen)
+        HTran[i] = 1; //copy of H (for transpose
+     }
+
+    for(int i = 0; i < StateSize*2; i++)
+    {
+        P_n_n[i] = 1; // estimate uncertinity
+        X_n_n[i] = 1; // state estimate
+        P_n_n_m_1[i] = 1; // predicted error
+        G[i] = 1; // control matrix
+        F[i] = dt*dt - 1*2 + dt*dt; // state transition matrix
+        FTran[i] = 1; // copy of state transion matrix copy to put in function
+        Q_meas[i] = 1; //Process noise matrix
+    }
+
+     // another for loop for H
+
+    
+    //uint16_t RSize = ASize; 
 
     mul(sigma_std, sigma_std, R_n, 1, ASize, ASize); // okay issue why does it not like R_n, seems like it doesn't want a matrix
 
 
-    // Defnining process noise matrix
-    float Q_meas[StateSize][StateSize]; // QUESTION/ISSUE: Size doesn't make sense here when mulitpied by sigma_std ** for now just made 0's of size but not mujltiplied by  
-    for(int i = 0; i < StateSize; i++)
-    {
-        for(int j = 0; j < StateSize; j++)
-        {
-            Q_meas[i][j] = 0; // just did this to get more flops (could fill in different estimate)
-        }
-    }
 
+/*
 
     // Define Process Noise Matrix 
     float Q[StateSize][StateSize];
@@ -186,7 +129,7 @@ int main()
     
 
 
-
+*/
 
 
 
