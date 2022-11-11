@@ -10,13 +10,18 @@
 
 #include "CControl/Headers/Functions.h"
 
-int main() {
+int main() 
+{
+
+	// Start clock to time code
 	clock_t start, end;
 	float cpu_time_used;
 	start = clock();
 
-	/* Your logic here */
 
+
+
+	// Stop code timing clock and print execution time
 	end = clock();
 	cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
 	printf("\nTotal speed  was %f\n", cpu_time_used);
