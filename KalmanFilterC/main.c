@@ -17,9 +17,8 @@ int main()
 	clock_t start, end;
 	float cpu_time_used;
 	start = clock();
-
-
-
+	
+	mul();
 
 	// Stop code timing clock and print execution time
 	end = clock();

@@ -1,98 +1,126 @@
-// Include Libraries
+/*
+ ============================================================================
+ Name        : KF_accel.c
+ Author      : Bennett Grow, Kaylie Rick, Jason Popich
+ Version     : 0.1
+ Copyright   : 
+ Description : 
+ ============================================================================
+ */
+
 #include "CControl/Headers/Functions.h"
-//#include "KF_accel.h"
+#include "add.c"
 
 int main()
 {
 
-    // struct State KF;
+    /*****  VARIABLE DECLARATION & PREALLOCATION  *****/
+    float dt = 1/100; //seconds
 
-     float dt = 1/100; //seconds
+    uint16_t ASize = 6;                     // Number of raw data inputs (6 DOF accelerations)
+    uint16_t StateSize = 25;                // State vector size
 
-     uint16_t ASize = 6;
-     uint16_t StateSize = 25;
+    float A[ASize];                         // Input acceleration vector
+    float sigma_std[ASize];                 // Input std deviations vector
+    float P_n_n[StateSize*StateSize];       // Estimate covariance matrix
+    float X_n_n[StateSize];                 // State vector
+    float U_n[StateSize];                   // Control/input variable vector
+    float X_n_n_m_1[StateSize];             // State vector
+    float P_n_n_m_1[StateSize*StateSize];   // Estimate covariance matrix
+    float G[StateSize*StateSize];           // control matrix
+    float F[StateSize*StateSize];           // State transition matrix
+    float FTran[StateSize*StateSize];       // Transposed state transition matrix
+    float H[StateSize];                     // Observation matrix
+    float HTran[StateSize];                 // Transposed observation matrix
+    float Q_meas[StateSize*StateSize];      // Process noise matrix
+    float R_n[ASize*ASize];                 // Measurement noise covariance matrix
 
-     float A[ASize]; //
-     float sigma_std[ASize];
-     float P_n_n[StateSize*StateSize];
-     float X_n_n[StateSize]; // also known as state
-     float U_n[StateSize];
-     float X_n_n_m_1[StateSize];
-     float P_n_n_m_1[StateSize*StateSize];
-     float G[StateSize*StateSize]; // control matrix
-     float F[StateSize*StateSize];
-     float FTran[StateSize*StateSize];
-     float H[StateSize];
-     float HTran[StateSize];
-     float Q_meas[StateSize*StateSize]; 
-     float R_n[ASize*ASize];
-
+    float X_n_p_1_n[StateSize];             // State vector
 
     
+    /*****  FILL VECTORS AND MATRICIES WITH DUMMY VALUES  *****/
+
+    // 6x1
     for(int j = 0; j < ASize; j++)
     {
-        A[j] = 1; //pre-allocating sensor data from each accelerometer
-        sigma_std[j] = 1; // pre-allocating error (std) from each acelerometer
+        A[j] = 1;                           // pre-allocating sensor data from each accelerometer
+        sigma_std[j] = 1;                   // pre-allocating error (std) from each acelerometer
     }
         
 
-
-     for(int i = 0; i < StateSize; i++)
-     {
-        U_n[i] = 1; 
-        X_n_n_m_1[i] = 1; // predicted state
-
-     }
-
-     for(int i = 0; i < StateSize + ASize; i ++)
-     {
-        H[i] = 1; //observation matrix (conversions happen)
-        HTran[i] = 1; //copy of H (for transpose
-     }
-
-    for(int i = 0; i < StateSize*2; i++)
+    // 25x1
+    for(int i = 0; i < StateSize; i++)
     {
-        P_n_n[i] = 1; // estimate uncertinity
-        X_n_n[i] = 1; // state estimate
-        P_n_n_m_1[i] = 1; // predicted error
-        G[i] = 1; // control matrix
-        F[i] = dt*dt - 1*2 + dt*dt; // state transition matrix
-        FTran[i] = 1; // copy of state transion matrix copy to put in function
-        Q_meas[i] = 1; //Process noise matrix
+        U_n[i] = 1; 
+        X_n_n_m_1[i] = 1;                   // predicted state
     }
 
-     // another for loop for H
+    // 25x6
+    for(int i = 0; i < StateSize * ASize; i ++)
+    {
+        H[i] = 1;                           //observation matrix (conversions happen)
+        // HTran[i] = 1;                    //copy of H (for transpose
+    }
 
-    
-    //uint16_t RSize = ASize; 
+    // 25x25
+    for(int i = 0; i < StateSize*StateSize; i++)
+    {
+        P_n_n[i] = 1;                       // estimate uncertinity
+        X_n_n[i] = 1;                       // state estimate
+        P_n_n_m_1[i] = 1;                   // predicted error
+        G[i] = 1;                           // control matrix
+        F[i] = dt*dt - 1*2 + dt*dt;         // state transition matrix
+        // FTran[i] = 1;                    // copy of state transion matrix copy to put in function
+        Q_meas[i] = 1;                      //Process noise matrix
+    }
 
-    mul(sigma_std, sigma_std, R_n, 1, ASize, ASize); // okay issue why does it not like R_n, seems like it doesn't want a matrix
+    /*****  X_n_p_1_n = F * X_n_n + G * U_n  *****/
 
+    // Declare temp vars FX_n_n & GU_n
+    float FX_n_n[StateSize];
+    float GU_n[StateSize];
+
+    // FX_n_n
+    mul(F, X_n_n, FX_n_n, StateSize, StateSize, 1);
+
+    // GU_n
+    mul(G, U_n, GU_n, StateSize, StateSize, 1);
+
+
+    add(FX_n_n, GU_n, X_n_p_1_n, StateSize);
+
+    print(X_n_p_1_n, StateSize, 1);
 
 
 /*
 
-    // Define Process Noise Matrix 
-    float Q[StateSize][StateSize];
-    float QTemp[StateSize][StateSize];
 
-     mul(F, Q_meas, QTemp, StateSize, StateSize, StateSize);
-     mul(QTemp, FTran, Q, StateSize, StateSize, StateSize);
+    // R_n = sigma * sigma
+    // 6x1 * 1x6
+    mul(sigma_std, sigma_std, R_n, ASize, 1, ASize); 
 
 
+// Define Process Noise Matrix 
+float Q[StateSize][StateSize];
+float QTemp[StateSize][StateSize];
+
+    mul(F, Q_meas, QTemp, StateSize, StateSize, StateSize);
+    mul(QTemp, FTran, Q, StateSize, StateSize, StateSize);
 
 
 
-     // *****Updating state to future state********
 
-     // Exteroplate state x_n_p_1_n and P_n_p_1_n
-     float x_n_p_1_n_temp1[StateSize];
-     float x_n_p_1_n_temp2[StateSize];
-     float P_n_p_1_n_temp1[StateSize][StateSize];
-     float P_n_p_1_n_temp2[StateSize][StateSize];
 
-     mul(F, x_n_n, x_n_p_1_n_temp1, StateSize, StateSize, 1);
-     mul(G, U_n, x_n_p_1_n_temp2, StateSize, StateSize, 1);
+    // *****Updating state to future state********
+
+    // Exteroplate state x_n_p_1_n and P_n_p_1_n
+    float x_n_p_1_n_temp1[StateSize];
+    float x_n_p_1_n_temp2[StateSize];
+    float P_n_p_1_n_temp1[StateSize][StateSize];
+    float P_n_p_1_n_temp2[StateSize][StateSize];
+
+    mul(F, x_n_n, x_n_p_1_n_temp1, StateSize, StateSize, 1);
+    mul(G, U_n, x_n_p_1_n_temp2, StateSize, StateSize, 1);
 
 
     float x_n_p_1_n[StateSize] = x_n_p_1_n_temp1 + x_n_p_1_n_temp2; // am I allowed to include a toolbox for adding
