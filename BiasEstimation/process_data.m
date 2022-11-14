@@ -2,7 +2,7 @@
 clear all; close all; clc;
 
 % Load data to matrix
-raw = readmatrix("ADXL357_DATA_1667950841.csv");
+raw = readmatrix("ADXL357_DATA_22_11_11_2.csv");
 
 % Average temperature of test
 temp = mean(raw(:,1)); % [deg C] 
