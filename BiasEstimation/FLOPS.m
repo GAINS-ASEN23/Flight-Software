@@ -1,6 +1,6 @@
 % Basic FLOPS calcs 
 
-N = 25; 
+N = 24; 
 L = 6;
 
 Ab = 2 * N^2 - N;
@@ -17,8 +17,13 @@ eqn3 = AN6 + AN6 + N + A66 + I + ANN;
 eqn4 = N + L + A6N1 + A6N1;
 eqn5 = N + AN66 + ANN + ANN + N + AN66 + N + AN66 + AN66;
 
-flop = eqn1 + eqn2 + eqn3 + eqn4 + eqn5;
+flop = eqn1 + eqn2 + eqn3 + eqn4 + eqn5
 clock = 84E6;
-cycles = clock/flop
-flops = flop * 100;
+cycles = clock/flop;
+flops = flop * 100
+
+
+I7 = 2150E9; %2150 GFLOPS for i7-12700H
+time = 0.000505000003613532;
+i7flop = time*I7;
 

@@ -226,7 +226,7 @@ int main()
     /*********************************************/
 	end = clock();
 	cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
-	printf("\nTotal speed  was %f\n", cpu_time_used);
+	printf("\nTotal speed  was %0.18f\n", cpu_time_used);
     /*********************************************/
 
 }
