@@ -1,6 +1,6 @@
 % Basic FLOPS calcs 
 
-N = 24; 
+N = 25; 
 L = 6;
 
 Ab = 2 * N^2 - N;
@@ -23,7 +23,6 @@ cycles = clock/flop;
 flops = flop * 100
 
 
-I7 = 2150E9; %2150 GFLOPS for i7-12700H
-time = 0.000505000003613532;
-i7flop = time*I7;
-
+DUE = 84E6;         %[MHz]
+time = 0.1882;      %[sec]
+time/DUE;
