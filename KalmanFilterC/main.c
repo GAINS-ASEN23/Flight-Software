@@ -13,7 +13,6 @@
 
 int main() 
 {
-	// bennett suxs :)
 
 	// Start clock to time code
 	clock_t start, end;

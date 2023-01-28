@@ -6,6 +6,10 @@ General Atomics Inertial Navigation System [GAINS]
 main.m
 Main script to run and test the GAINS Kalman Filter in Matlab
 
+AccelNoiseRed.m
+Uses accelerometer characteristics derived in testing to reducuce error in
+the 
+
 
 Bennett Grow
 
@@ -13,8 +17,12 @@ Bennett Grow
 
 %}
 
+% Housekeeping
 clc; close all; clear all;
 
+
+%% Defining Parameters
+% Setting up struct
 S = struct;                     % Initialize struct S to hold all relevant information for KF
 S.timeStep = 1/100;             % [sec] Elapsed time between KF cycles
 S.endTime = 10;                 % [sec] End time of KF
@@ -50,11 +58,60 @@ S.Q_a(5,5) = S.sigma2;
 S.Q_a(6,6) = S.sigma3;
 
 % Process noise covariance
-S.Qold = S.F*S.Q_a*S.F';
+S.Q = S.F*S.Q_a*S.F';
 
-S.Q = S.F*(S.Q_a)*S.F';
+S.G = S.F*S.B;
+
+% Initial State
+S.x_n_n = [zeros(3,1)]
+
+%%%%%% Begining of cyclical equations %%%%%%%% run at 100 Hz or more
+% need to simulate for loop
+
+%% Taking inputs/ determing input acceleration
+% Simulate raw data
+accel_raw = [1 1 1]; % temporary filler values (m/s^2)
 
 
+% gyroscope/ star tracker control loop
+
+% Accelerometer coordinate frame transformation
+
+% Noise mitigation
+[ax_bar, ay_bar, az_bar] = AccelNoiseRed(1,1,1); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
+S.accel_mit = [ax_bar, ay_bar, az_bar];
+
+
+%% Kalman Filter equations
+% Q: how does accel factor into kalman filter equations (don't think this
+% part has been correctly updated on flowchart)
+
+% Time Update
+    % Extrapolate the state
+    S.x_n_p_1_n = S.F*S.x_n_n + G*U_n;
+    
+    % Extrapolate uncertainty
+    P_n_p_1_n = F*P_n_n*F' + Q;
+    
+% Measurement Update
+    
+    % Compute the Kalman Gain
+    K_n = P_n_p_1_n*H'*((H*P_n_p_1_n*H' + R_n)^-1);
+    
+    % Compute Measurement Equation
+    z_n = H*[0; 0; A(i)];
+    
+    % Update the estimate with measurement
+    x_n_n = x_n_p_1_n + K_n*(z_n - H*x_n_p_1_n);
+    
+    % Get the size of H
+    [H_rows, H_cols] = size(H);
+    
+    % Update the estimate uncertainty
+    P_n_n = (eye(H_rows,H_cols) - K_n*H)*P_n_p_1_n*((eye(H_rows,H_cols) - K_n*H)')+K_n*R_n*K_n';
+    
+    % Output state
+    state = [state x_n_n];
 
 
 
