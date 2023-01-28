@@ -63,14 +63,14 @@ S.Q = S.F*S.Q_a*S.F';
 S.G = S.F*S.B;
 
 % Observatation matrix (update with any needed unit converstion)
-S.H = eye(3);
+S.H = eye(6);
 
 % Measurement noise covariance matrix (Assumed perfect at the moment, could
 % use DSN, GPS to change)
-S.R_n = zeros(6,6);
+S.R_n = zeros(6,1);
 
 % Initial State and initial error 
-S.x_n_n = zeros(6,6);
+S.x_n_n = zeros(6,1);
 S.P_n_n = zeros(6,6);
 
 %%%%%% Begining of cyclical equations %%%%%%%% run at 100 Hz or more
@@ -90,12 +90,8 @@ accel_raw = [1 1 1]; % temporary filler values (m/s^2)
 
 % Noise mitigation
 [ax_bar, ay_bar, az_bar] = AccelNoiseRed(1,1,1); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
-accel_mit = [ax_bar, ay_bar, az_bar]; 
-S.U_t = [0 0 0 accel_mit]; % double check that this is the correct implementation of U_t (dimentions don't make sense)
+S.U_t  = [ax_bar, ay_bar, az_bar]; 
 
-%{ 
-comented out becuase there's some issues with dimentions (specifically
-%U_t)
 
 %% Kalman Filter equations
 % Q: how does accel factor into kalman filter equations (don't think this
@@ -103,10 +99,10 @@ comented out becuase there's some issues with dimentions (specifically
 
 % Time Update
     % Extrapolate the state
-    S.x_n_p_1_n = S.F*S.x_n_n + S.G*S.U_t; % double check that this is the correct implementation of U_t (dimentions don't make sense)
+    S.x_n_p_1_n = S.F*S.x_n_n + S.G*S.U_t'; % double check that this is the correct implementation of U_t (dimentions don't make sense)
     
     % Extrapolate uncertainty
-    S.P_n_p_1_n = S.F*S.P_n_n*F' + S.Q;
+    S.P_n_p_1_n = S.F*S.P_n_n*S.F' + S.Q;
     
 % Measurement Update
     
@@ -120,12 +116,13 @@ comented out becuase there's some issues with dimentions (specifically
     [H_rows, H_cols] = size(S.H);
     
     % Update the estimate uncertainty
-    S.P_n_n = (eye(H_rows,H_cols) - S.K_n*S.H)*S.P_n_p_1_n*((eye(H_rows,H_cols) - S.K_n*H)')+S.K_n*S.R_n*S.K_n';
+    S.P_n_n1 = (eye(H_rows,H_cols) - S.K_n*S.H)*S.P_n_p_1_n*((eye(H_rows,H_cols) - S.K_n*S.H)') + (S.K_n*S.R_n)'*S.K_n';
+
     
     % Output state
-    state = [state S.x_n_n];
+    %state = [state S.x_n_n];
 
-%}
+
 
 
 
