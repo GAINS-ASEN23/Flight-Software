@@ -6,6 +6,10 @@ General Atomics Inertial Navigation System [GAINS]
 main.m
 Main script to run and test the GAINS Kalman Filter in Matlab
 
+AccelNoiseRed.m
+Uses accelerometer characteristics derived in testing to reducuce error in
+the 
+
 
 Bennett Grow
 
@@ -13,8 +17,12 @@ Bennett Grow
 
 %}
 
+% Housekeeping
 clc; close all; clear all;
 
+
+%% Defining Parameters
+% Setting up struct
 S = struct;                     % Initialize struct S to hold all relevant information for KF
 S.timeStep = 1/100;             % [sec] Elapsed time between KF cycles
 S.endTime = 10;                 % [sec] End time of KF
@@ -53,6 +61,68 @@ S.Q_a(6,6) = S.sigma3;
 S.Q = S.F*S.Q_a*S.F';
 
 S.G = S.F*S.B;
+
+% Observatation matrix (update with any needed unit converstion)
+S.H = eye(6);
+
+% Measurement noise covariance matrix (Assumed perfect at the moment, could
+% use DSN, GPS to change)
+S.R_n = zeros(6,1);
+
+% Initial State and initial error 
+S.x_n_n = zeros(6,1);
+S.P_n_n = zeros(6,6);
+
+%%%%%% Begining of cyclical equations %%%%%%%% run at 100 Hz or more
+% need to simulate for loop
+
+%% Taking inputs/ determing input acceleration
+% Get z_n from ground station
+S.z_n = [1 0 0 1 1 1]; % filler (random)
+
+% Simulate raw data
+accel_raw = [1 1 1]; % temporary filler values (m/s^2)
+
+
+% gyroscope/ star tracker control loop
+
+% Accelerometer coordinate frame transformation
+
+% Noise mitigation
+[ax_bar, ay_bar, az_bar] = AccelNoiseRed(1,1,1); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
+S.U_t  = [ax_bar, ay_bar, az_bar]; 
+
+
+%% Kalman Filter equations
+% Q: how does accel factor into kalman filter equations (don't think this
+% part has been correctly updated on flowchart)
+
+% Time Update
+    % Extrapolate the state
+    S.x_n_p_1_n = S.F*S.x_n_n + S.G*S.U_t'; % double check that this is the correct implementation of U_t (dimentions don't make sense)
+    
+    % Extrapolate uncertainty
+    S.P_n_p_1_n = S.F*S.P_n_n*S.F' + S.Q;
+    
+% Measurement Update
+    
+    % Compute the Kalman Gain
+    S.K_n = S.P_n_p_1_n*S.H'*((S.H*S.P_n_p_1_n*S.H' + S.R_n)^-1);
+    
+    % Update the estimate with measurement
+    S.x_n_n = S.x_n_p_1_n + S.K_n*(S.z_n - S.H*S.x_n_p_1_n);
+    
+    % Get the size of H
+    [H_rows, H_cols] = size(S.H);
+    
+    % Update the estimate uncertainty
+    S.P_n_n1 = (eye(H_rows,H_cols) - S.K_n*S.H)*S.P_n_p_1_n*((eye(H_rows,H_cols) - S.K_n*S.H)') + (S.K_n*S.R_n)'*S.K_n';
+
+    
+    % Output state
+    %state = [state S.x_n_n];
+
+
 
 
 
