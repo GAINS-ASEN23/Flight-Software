@@ -3,7 +3,7 @@ function [ax_bar, ay_bar, az_bar] = AccelNoiseRed(ax, ay, az)
 % Defining accelerometer paramenters from testing (not yet done, filler
 % values)
 
-% Bias values (filler -> from datasheet)
+% Bias values (filler -> from datasheet) [m/s^2]
 Bx = 0.1962;
 By = 0.1962;
 Bz = 0.1962;

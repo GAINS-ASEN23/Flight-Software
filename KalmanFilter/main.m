@@ -73,20 +73,62 @@ S.R_n = zeros(6,1);
 S.x_n_n = zeros(6,1);
 S.P_n_n = zeros(6,6);
 
+%% Load in gyroscope, accelerometer, and star tracker data
+% (KAYLIE DELETE THIS WHEN DONE TESTING FUNC)***************************
+clc; clear;
+% Fake data for rn purposes (load in from stk later)
+sampleSize = 20;
+accel_raw = ones(sampleSize,3);
+gyro_raw = ones(sampleSize,3);
+
+% for loop to populate sample every 10 datapoints (1,11,21,ect) like this
+%   b/c the first sample cannot be NaN
+starTracker_raw = NaN(sampleSize,4);
+for i = 1:10:sampleSize
+    %disp(i)
+    starTracker_raw(i,:) = [1,1,1,1];
+end
+% set inital quat_prev (inital quaterion going into the tranformation
+% function, Accel_Inertial)
+quat_prev = starTracker_raw(1,:);
+
+% check for correctness 
+%{
+for i = 1:sampleSize
+    if isnan(starTracker_raw(i,1)) || isnan(starTracker_raw(i,2)) || isnan(starTracker_raw(i,3))
+        disp(i)
+        disp('NaN')
+    end
+end
+%}
+
 %%%%%% Begining of cyclical equations %%%%%%%% run at 100 Hz or more
 % need to simulate for loop
 
-%% Taking inputs/ determing input acceleration
+% Taking inputs/ determing input acceleration (KAYLIE RE-DOUBLE PARANTHESIS
+% THIS WHEN DONE TESTING FUNC)***************************
 % Get z_n from ground station
 S.z_n = [1 0 0 1 1 1]; % filler (random)
 
-% Simulate raw data
-accel_raw = [1 1 1]; % temporary filler values (m/s^2)
+% PLACE HOLDER FOR LOOP FOR TESTING THE ACCEL INERIAL FUNCTION (WILL NEED
+% TO CHANGE LATER)
+for j = 1:sampleSize
+
+% Getting accel and gyro at each time step to go into Accel_Inertial
+%   funtion
+accel_body = accel_raw(j,:);
+gyro = gyro_raw(j,:);
+st = starTracker_raw(j,:);
 
 
-% gyroscope/ star tracker control loop
+% gyroscope/ star tracker control loop and accelerometer coordinate frame transformation
+%   send in accel_body, gryo, at 3x1 and st, quat_prev
+[accel_inertial, quat_next] = Accel_Inertial(accel_body, gyro, st, quat_prev);
 
-% Accelerometer coordinate frame transformation
+% updatding quaternion to go back into function
+quat_prev = quat_next;
+
+end
 
 % Noise mitigation
 [ax_bar, ay_bar, az_bar] = AccelNoiseRed(1,1,1); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
