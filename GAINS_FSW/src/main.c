@@ -16,26 +16,27 @@
 void setup()
 {
 	pinMode(LED_BUILTIN, OUTPUT);
-
+	Serial.begin(115200);
 }
 
 
 void loop() 
 {
-
+	Serial.println('Hello World');
 
 
 	for (int i = 0; i<1000; i++)
 	{
-		//BEGINNING = micros();
-		digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+
+		digitalWrite(LED_BUILTIN, HIGH); 
 		KF();
 		digitalWrite(LED_BUILTIN, LOW);
 
 
-		delay(1000);
+		//delay(1000);
 
 	}
 
 	exit(0);
+
 }
