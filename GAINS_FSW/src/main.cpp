@@ -22,7 +22,8 @@ void setup()
 
 void loop() 
 {
-	Serial.println('Hello World');
+	delay(2000);
+	Serial.println("Initialized...");
 
 
 	for (int i = 0; i<1000; i++)
