@@ -11,53 +11,58 @@
 #include <Arduino.h>
 #include <GAINSKF.h>
 
-//#define HWSERIAL Serial1
 
 void setup()
 {
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(115200);
-	//HWSERIAL.begin(115200);
 }
 
 
 void loop() 
 {
-	delay(2000);
-	Serial.println("Initialized...");
-	//HWSERIAL.println("Initialized...");
-
 	delay(1000);
+	Serial.println("Initialized...");
 
+	delay(500);
 
-	for (int i = 0; i<1000; i++)
+	for (size_t i = 0; i < 1000; i++)
 	{
+	
 		digitalWrite(LED_BUILTIN, HIGH); 
+
 		unsigned long start = micros();
+		unsigned long now;
+		unsigned long duration;
+		int counter = 0;
 
-		for (int i = 0; i<100; i++)
-		{	
-
+		while (true)
+		{
 
 			KF();
 
+			now = micros();
+			duration = now - start; 
+
+			counter += 1;
+
+			if (duration >= 1000000)
+			{
+				break;
+			}
+
 		}
 
-		unsigned long end = micros();
-		unsigned long duration = end - start; 
+		Serial.print("KF cycles in ");
+		Serial.print(duration/pow(10,6));
+		Serial.print(" second(s):  ");
+		Serial.println(counter);
 
-		Serial.print(i);
-		Serial.print("  Time to execute 100 KF cycles:  ");
-		Serial.print(duration);
-		Serial.print(" microseconds / ");
-		Serial.print(duration/pow(10,3));
-		Serial.println(" milliseconds ");
-
-		//HWSERIAL.println(i);
 		digitalWrite(LED_BUILTIN, LOW);
+
 		delay(1000);
+
 	}
-	
 
 	exit(0);
 
