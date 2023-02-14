@@ -10,13 +10,14 @@
 
 #include <Arduino.h>
 #include <GAINSKF.h>
-#include <chrono>
-//#include <time.h> 						// For srand, clock
+
+//#define HWSERIAL Serial1
 
 void setup()
 {
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(115200);
+	//HWSERIAL.begin(115200);
 }
 
 
@@ -24,28 +25,39 @@ void loop()
 {
 	delay(2000);
 	Serial.println("Initialized...");
+	//HWSERIAL.println("Initialized...");
+
 	delay(1000);
 
 
 	for (int i = 0; i<1000; i++)
 	{
-
 		digitalWrite(LED_BUILTIN, HIGH); 
-		
-		auto begin = std::chrono::high_resolution_clock::now();
+		unsigned long start = micros();
 
-		KF();
+		for (int i = 0; i<100; i++)
+		{	
 
-		auto end = std::chrono::high_resolution_clock::now();
-    	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
-    
+
+			KF();
+
+		}
+
+		unsigned long end = micros();
+		unsigned long duration = end - start; 
+
+		Serial.print(i);
+		Serial.print("  Time to execute 100 KF cycles:  ");
+		Serial.print(duration);
+		Serial.print(" microseconds / ");
+		Serial.print(duration/pow(10,3));
+		Serial.println(" milliseconds ");
+
+		//HWSERIAL.println(i);
 		digitalWrite(LED_BUILTIN, LOW);
-
-		Serial.println(elapsed.count());
-
 		delay(1000);
-
 	}
+	
 
 	exit(0);
 
