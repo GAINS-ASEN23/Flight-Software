@@ -23,18 +23,18 @@ clc; close all; clear all;
 addpath('C:\Users\Addi Woodard\OneDrive - UCB-O365\00_Sr Spring\ASEN 4018 - GAINS\3 - Flight Software\AccelGyroData');
 load('accelgyrodata.mat');
 
-%Startracker
+%Startracker - TRIMMED to first 500 points
 starTracker_raw = csvread('StarTrackerSample.csv');
-ST_X = starTracker_raw(:,1);
-ST_Y = starTracker_raw(:,2);
-ST_Z = starTracker_raw(:,3);
-ST_VX = starTracker_raw(:,4);
-ST_VY = starTracker_raw(:,5);
-ST_VZ = starTracker_raw(:,6);
-ST_B0 = starTracker_raw(:,7);
-ST_B1 = starTracker_raw(:,8);
-ST_B2 = starTracker_raw(:,9);
-ST_B3 = starTracker_raw(:,10);
+ST_X = starTracker_raw(1:500,1);
+ST_Y = starTracker_raw(1:500,2);
+ST_Z = starTracker_raw(1:500,3);
+ST_VX = starTracker_raw(1:500,4);
+ST_VY = starTracker_raw(1:500,5);
+ST_VZ = starTracker_raw(1:500,6);
+ST_B0 = starTracker_raw(1:500,7);
+ST_B1 = starTracker_raw(1:500,8);
+ST_B2 = starTracker_raw(1:500,9);
+ST_B3 = starTracker_raw(1:500,10);
 
 %% Defining Parameters
 % Setting up struct
@@ -91,10 +91,11 @@ S.P_n_n = zeros(6,6);
 %% Load in gyroscope, accelerometer, and star tracker data
 % Fake data for rn purposes (load in from stk later)
 %sampleSize = 20;
-accel_raw = xyz5(1:end-5,:);%ones(sampleSize,3);
-%accel_raw(:,1) = 2;
-gyro_raw = gxyz5;%.01.*ones(sampleSize,3);
-sampleSize = length(starTracker_raw);
+accel_raw = xyz5(1:500,:); %5 points longer than gyro data if using all of it!
+gyro_raw = gxyz5(1:500,:);
+sampleSize = length(ST_X);
+
+%%% STILL WORKING ON PADDING - AW
 
 % for loop to populate sample every 10 datapoints (1,11,21,ect) like this
 %   b/c the first sample cannot be NaN
@@ -107,6 +108,7 @@ sampleSize = length(starTracker_raw);
 
 % set inital quat_prev (inital quaterion going into the tranformation
 % function, Accel_Inertial)
+%Set initial quaternion
 quat_prev = starTracker_raw(1,7:10);
 
 % check for correctness 
@@ -127,10 +129,13 @@ end
 
 % PLACE HOLDER FOR LOOP FOR TESTING THE ACCEL INERIAL FUNCTION (WILL NEED
 % TO CHANGE LATER)
+tic
 for j = 1:sampleSize
 
     % Get z_n from ground station
     S.z_n = [1 0 0 1 1 1]; % filler (random)
+    %If we don't get data, these are zeros??
+
 
     % Getting accel and gyro at each time step to go into Accel_Inertial
     %   funtion
@@ -143,8 +148,8 @@ for j = 1:sampleSize
     %   send in accel_body, gryo, at 3x1 and st, quat_prev
     %[accel_inertial(j), quat_next(j)] = Accel_Inertial(accel_body(j,:), gyro(j,:), st(j,:), quat_prev(j,:));
     [accel_inertial(j,:),quat_next(j,:)] = Accel_Inertial(accel_body(j,:), gyro(j,:), st(j,:), quat_prev(j,:));
-    % updatding quaternion to go back into function
-    quat_prev = quat_next;
+    % updating quaternion to go back into function
+    quat_prev(j+1,:) = quat_next(j,:);
     
 
     
@@ -159,8 +164,11 @@ for j = 1:sampleSize
     
     % Time Update
         % Extrapolate the state
-        S.x_n_p_1_n(:,j) = S.F*S.x_n_n + S.G*S.U_t(j,:)'; % double check that this is the correct implementation of U_t (dimentions don't make sense)
-        
+        if j == 1 %ALWAYS start with update from the ground (z_n == x_n_n(1))
+            S.x_n_p_1_n(:,j) = S.F*S.z_n' + S.G*S.U_t(j,:)'; % double check that this is the correct implementation of U_t (dimentions don't make sense)
+        else
+            S.x_n_p_1_n(:,j) = S.F*S.x_n_n(:,j-1) + S.G*S.U_t(j,:)';
+        end
         % Extrapolate uncertainty
         S.P_n_p_1_n = S.F*S.P_n_n*S.F' + S.Q;
         
@@ -170,7 +178,7 @@ for j = 1:sampleSize
         S.K_n = S.P_n_p_1_n*S.H'*((S.H*S.P_n_p_1_n*S.H' + S.R_n)^-1);
         
         % Update the estimate with measurement
-        S.x_n_n = S.x_n_p_1_n(:,j) + S.K_n*(S.z_n - S.H*S.x_n_p_1_n(:,j));
+        S.x_n_n(:,j) = S.x_n_p_1_n(:,j) + S.K_n*(S.z_n' - S.H*S.x_n_p_1_n(:,j));
         
         % Get the size of H
         [H_rows, H_cols] = size(S.H);
@@ -179,11 +187,26 @@ for j = 1:sampleSize
         S.P_n_n1 = (eye(H_rows,H_cols) - S.K_n*S.H)*S.P_n_p_1_n*((eye(H_rows,H_cols) - S.K_n*S.H)') + (S.K_n*S.R_n)'*S.K_n';
     
         
-        % Output state
-        S.FinalState = [S.x_n_p_1_n(:,j) S.x_n_n];
+        % Output state [current state (6x1);next state(6x1)]
+        S.FinalState(:,j) = [S.x_n_n(:,j);S.x_n_p_1_n(:,j)];
 end    
+toc
     
-    
-    
-    
+%Plotting   
+figure
+plot(1:length(S.FinalState),S.FinalState(1,:),'.b');
+hold on;
+plot(1:length(S.FinalState),S.FinalState(2,:),'.g')
+plot(1:length(S.FinalState),S.FinalState(3,:),'.r')
+title('Position vs Time');
 
+figure
+plot(1:length(S.FinalState),S.FinalState(4,:),'.b');
+hold on;
+plot(1:length(S.FinalState),S.FinalState(5,:),'.g')
+plot(1:length(S.FinalState),S.FinalState(6,:),'.r')
+title('Velocity vs Time');
+
+
+%Provisions added for how long it takes to run 500 points (tic-toc)
+%Next, cut data to 30 mins to check it
