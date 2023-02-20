@@ -10,8 +10,7 @@
 
 #include <Arduino.h>
 #include <GAINSKF.h>
-#include <chrono>
-//#include <time.h> 						// For srand, clock
+
 
 void setup()
 {
@@ -22,26 +21,44 @@ void setup()
 
 void loop() 
 {
-	delay(2000);
-	Serial.println("Initialized...");
 	delay(1000);
+	Serial.println("Initialized...");
 
+	delay(500);
 
-	for (int i = 0; i<1000; i++)
+	for (size_t i = 0; i < 1000; i++)
 	{
-
+	
 		digitalWrite(LED_BUILTIN, HIGH); 
-		
-		auto begin = std::chrono::high_resolution_clock::now();
 
-		KF();
+		unsigned long start = micros();
+		unsigned long now;
+		unsigned long duration;
+		int counter = 0;
 
-		auto end = std::chrono::high_resolution_clock::now();
-    	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
-    
+		while (true)
+		{
+
+			KF();
+
+			now = micros();
+			duration = now - start; 
+
+			counter += 1;
+
+			if (duration >= 1000000)
+			{
+				break;
+			}
+
+		}
+
+		Serial.print("KF cycles in ");
+		Serial.print(duration/pow(10,3));
+		Serial.print(" milliseconds:  ");
+		Serial.println(counter);
+
 		digitalWrite(LED_BUILTIN, LOW);
-
-		Serial.println(elapsed.count());
 
 		delay(1000);
 

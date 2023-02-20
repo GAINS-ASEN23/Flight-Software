@@ -154,7 +154,7 @@ void KF()
     // Invert HP_n_n_m_1HTR_n
     if(inv(HP_n_n_m_1HTR_n, ASize) == 0)
     {
-        printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
+        //printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
     }
 
     // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
