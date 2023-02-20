@@ -20,8 +20,8 @@ clc; close all; clear all;
 
 %% Read in data
 %Accel/gyro
-addpath('C:\Users\Addi Woodard\OneDrive - UCB-O365\00_Sr Spring\ASEN 4018 - GAINS\3 - Flight Software\AccelGyroData');
-load('accelgyrodata.mat');
+%addpath('C:\Users\Addi Woodard\OneDrive - UCB-O365\00_Sr Spring\ASEN 4018 - GAINS\3 - Flight Software\AccelGyroData');
+load('2.7.23-35min-100Hz-accelGyro.mat');
 
 %Startracker - TRIMMED to first 500 points
 starTracker_raw = csvread('StarTrackerSample.csv');
@@ -91,8 +91,10 @@ S.P_n_n = zeros(6,6);
 %% Load in gyroscope, accelerometer, and star tracker data
 % Fake data for rn purposes (load in from stk later)
 %sampleSize = 20;
-accel_raw = xyz5(1:500,:); %5 points longer than gyro data if using all of it!
-gyro_raw = gxyz5(1:500,:);
+accel_raw = timetable2table(Acceleration(1:500,:)); %5 points longer than gyro data if using all of it! %(Kaylie) coverted from timetable because causing issues (do we want/need it in time table?)
+accel_raw = table2array(accel_raw(:,2:4));
+gyro_raw = timetable2table(AngularVelocity(1:500,:));
+gyro_raw = table2array(gyro_raw(:,2:4));
 sampleSize = length(ST_X);
 
 %%% STILL WORKING ON PADDING - AW
@@ -133,7 +135,7 @@ tic
 for j = 1:sampleSize
 
     % Get z_n from ground station
-    S.z_n = [1 0 0 1 1 1]; % filler (random)
+    S.z_n = [0 0 0 0 0 0]; % 0's should mean getting nothing
     %If we don't get data, these are zeros??
 
 
@@ -154,13 +156,14 @@ for j = 1:sampleSize
 
     
     % Noise mitigation
-    [ax_bar(j), ay_bar(j), az_bar(j)] = AccelNoiseRed(accel_inertial(j,1),accel_inertial(j,2),accel_inertial(j,3)); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
+    %[ax_bar(j), ay_bar(j), az_bar(j)] = AccelNoiseRed(accel_inertial(j,1),accel_inertial(j,2),accel_inertial(j,3)); % I should be able to do lines 78 and 79 in one step ya? it doesn't :(
+    ax_bar(j) = accel_inertial(j,1);
+    ay_bar(j) = accel_inertial(j,2);
+    az_bar(j) = accel_inertial(j,3);
     S.U_t(j,:)  = [ax_bar(j), ay_bar(j), az_bar(j)]; 
     
     
     %% Kalman Filter equations
-    % Q: how does accel factor into kalman filter equations (don't think this
-    % part has been correctly updated on flowchart)
     
     % Time Update
         % Extrapolate the state
