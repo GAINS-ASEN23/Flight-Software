@@ -54,8 +54,8 @@ void loop()
 		}
 
 		Serial.print("KF cycles in ");
-		Serial.print(duration/pow(10,6));
-		Serial.print(" second(s):  ");
+		Serial.print(duration/pow(10,3));
+		Serial.print(" milliseconds:  ");
 		Serial.println(counter);
 
 		digitalWrite(LED_BUILTIN, LOW);
