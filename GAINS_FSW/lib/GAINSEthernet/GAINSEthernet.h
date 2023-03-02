@@ -1,7 +1,7 @@
 /*
- * GAINSFunctions.h
+ * GAINSEthernet.h
  *
- * Created on: 7 Feb. 2023
+ * Created on: 1 Mar. 2023
  * Author: Bennett Grow
  */
 
