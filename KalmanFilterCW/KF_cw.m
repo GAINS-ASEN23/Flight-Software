@@ -1,4 +1,4 @@
-function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
+function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t, Q)
 %{
     Last Edited: Jason Popich 02/28/23
 
@@ -36,10 +36,10 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
 
     
     % Define the input matrix
-    B = [zeros(3); eye(3)];
+    % B = [zeros(3); eye(3)];
     
     % Define Control Matrix
-    G = F*B;
+    % G = F*B;
 
     % Define the observation matrix
     H = eye(6);
@@ -61,7 +61,7 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
     % Time Update
 
     % Extrapolate the state
-    x_n_p_1_n = F*x_n_n + G*U_n;
+    x_n_p_1_n = F*x_n_n ;%+ G*U_n;
 
     % Extrapolate uncertainty
     P_n_p_1_n = F*P_n_n*F' + Q;
