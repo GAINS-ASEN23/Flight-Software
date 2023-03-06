@@ -10,11 +10,11 @@ a_moon = 1.74e6+5e4;            % Semimajor axis of Moon's orbit around Earth [m
 r_int = 500;
 
 % Create initial coordinates representing the target (Moon)
-   xt = rad_earth + a_moon;
+   xt = a_moon;
    yt = 0;
    zt = 0;
 xdott = 0;
-ydott = sqrt(mu_earth/(rad_earth + a_moon));
+ydott = sqrt(mu_earth/(a_moon));
 zdott = 0;
 rT = [xt, yt, zt]';
 vT = [xdott,ydott,zdott]';
@@ -25,11 +25,8 @@ RYM = [cosd(inc) 0 sind(inc); 0 1 0; -sind(inc) 0 cosd(inc)];
 rT = RYM*rT;
 vT = RYM*vT;
 
-% Create initial coordinates representing the chaser satellite (Hubble)
-% Initial Positions and Velocities of the hubble telescope from the space 
-% shuttle bay All units are in km/s
-% Assume that both telescope and shuttle are docked initially
-   xi = rT(1);
+% Create initial coordinates representing the chaser satellite 
+   xi = rT(1) + 1000;
    yi = rT(2);
    zi = rT(3);
 xdoti = vT(1);
