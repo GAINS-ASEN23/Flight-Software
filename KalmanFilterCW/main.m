@@ -16,13 +16,13 @@ close all;
 tic;
 
 %% Sample Data
-sampledata = readmatrix("StarTrackerSample.csv");
+% sampledata = readmatrix("StarTrackerSample.csv");
 
-n = 10000;                  % Number of data points
-dt = 0.01;                  % Time step
+N = 35000;                  % Number of data points
+dt = 2;                     % Time step
 t1 = 0;                     % Start time
-t2 = n*dt + t1;             % End time
-t = linspace(t1, t2, n);    % n times from t1 to t1
+t2 = N*dt + t1;             % End time
+t = linspace(t1, t2, N);    % n times from t1 to t1
 
 %% Set the initial conditions
 
@@ -31,25 +31,30 @@ t = linspace(t1, t2, n);    % n times from t1 to t1
 
 mu_moon = 4.9048695e12;                 % Gravitational parameter of the Moon [m^3 s^-2]
 rad_moon = 1738100;                     % Radius of the Moon [m]
+a_moon = 1.74e6+5e4;                    % Semimajor axis of Moon's orbit around Earth [m]
 orbit_alt = 1000;                       % Orbit altitude above the moon [m]
 orbit_rad = rad_moon + orbit_alt;       % Orbit radius [m]
-v = sqrt(mu_moon / orbit_rad);          % Orbital velocity [m/s]
+n_mm = sqrt(mu_moon/(a_moon^3));        % Mean motion of the Moon around the Earth [rad/s] 
 
-x_n_n = [orbit_rad; 0; 0; 0; v; 0];
+x_0 = orbit_rad;                        % Initial Position [m] Hill Frame
+% y_dot_0 = sqrt(mu_moon / orbit_rad);          % Initial Orbital velocity [m/s] Hill Frame
+y_dot_0 = -2*n_mm*x_0;                  % Initial Orbital velocity [m/s] Hill Frame
+
+x_n_n = [x_0; 0; 0; 0; y_dot_0; 0];
 
 % The initial estimate uncertainty vector for the CW KF
-p_n_n = [eye(3)*0.1 zeros(3); zeros(3) eye(3)*(1e-5)];
+p_n_n = [eye(3)*0.1 zeros(3); zeros(3) eye(3)*(1)];
 
 
 %% Run the Kalman Filter
 state = [];
 error = [];
 
-for i = 1:n
+for i = 1:N
 
     % Get the current Measurement
     % M_n = accel_x_n_n;
-    M_n = zeros(6,1);
+    M_n = x_n_n;
     
     % Get the current Input
     U_n = zeros(3,1);
