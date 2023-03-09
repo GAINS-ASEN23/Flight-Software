@@ -1,4 +1,4 @@
-function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t, Q)
+function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
 %{
     Last Edited: Jason Popich 02/28/23
 
@@ -42,10 +42,10 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t, Q)
     % G = F*B;
 
     % Define the observation matrix
-    H = eye(6);
+    H = zeros(6);
     
     % Set errors
-    pos_sigma = 0.1;              % Position error in [km]
+    pos_sigma = 1000;              % Position error in [km]
     vel_sigma = 1;               % Velocity error in [km/s]
     
     % Define the Measurement Process Noise Matrix, Q_meas

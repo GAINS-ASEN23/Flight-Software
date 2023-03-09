@@ -18,8 +18,8 @@ tic;
 %% Sample Data
 % sampledata = readmatrix("StarTrackerSample.csv");
 
-N = 72000;                  % Number of data points
-dt = 0.1;                     % Time step
+N = 30000;                  % Number of data points
+dt = 2;                     % Time step
 t1 = 0;                     % Start time
 t2 = N*dt + t1;             % End time
 t = linspace(t1, t2, N);    % n times from t1 to t1
@@ -43,7 +43,7 @@ y_dot_0 = -2*n_mm*x_0;                  % Initial Orbital velocity [m/s] Hill Fr
 x_n_n = [x_0; 0; 0; 0; y_dot_0; 0];
 
 % The initial estimate uncertainty vector for the CW KF
-p_n_n = [eye(3)*0.1 zeros(3); zeros(3) eye(3)*(1)];
+p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 
 %% Run the Kalman Filter
@@ -61,7 +61,7 @@ for i = 1:N
     
     % Get the current Measurement Error
     % R_n = accel_p_n_n;
-    R_n = eye(6)*1e10;
+    R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
     
     % Run the KF equations for current step
     [x_n_n, p_n_n] = KF_cw(M_n, U_n, x_n_n, p_n_n, R_n, dt);
