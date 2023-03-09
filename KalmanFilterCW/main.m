@@ -18,8 +18,8 @@ tic;
 %% Sample Data
 % sampledata = readmatrix("StarTrackerSample.csv");
 
-N = 35000;                  % Number of data points
-dt = 2;                     % Time step
+N = 72000;                  % Number of data points
+dt = 0.1;                     % Time step
 t1 = 0;                     % Start time
 t2 = N*dt + t1;             % End time
 t = linspace(t1, t2, N);    % n times from t1 to t1
@@ -86,19 +86,19 @@ if plot_pos_vel == true
     figure(1);
     title("Position (m)")
     subplot(3,1,1)
-    plot(t, state(:,1));
+    plot(t(1:length(state(:,1))), state(:,1));
     hold on;
     %plot(t, sampledata(1:n,1));
     ylabel("x (m)")
     
     subplot(3,1,2)
-    plot(t, state(:,2));
+    plot(t(1:length(state(:,1))), state(:,2));
     hold on;
     %plot(t, sampledata(1:n,2));
     ylabel("y (m)")
     
     subplot(3,1,3)
-    plot(t, state(:,3));
+    plot(t(1:length(state(:,1))), state(:,3));
     hold on;
     %plot(t, sampledata(1:n,3));
     ylabel("z (m)")
@@ -106,19 +106,19 @@ if plot_pos_vel == true
     figure(2);
     title("Velocity (m)")
     subplot(3,1,1)
-    plot(t, state(:,4));
+    plot(t(1:length(state(:,1))), state(:,4));
     hold on;
     %plot(t, sampledata(1:n,4));
     ylabel("${\dot{x}}$ (m)", 'interpreter', 'latex', 'FontWeight', 'bold')
     
     subplot(3,1,2)
-    plot(t, state(:,5));
+    plot(t(1:length(state(:,1))), state(:,5));
     hold on;
     %plot(t, sampledata(1:n,5));
     ylabel("${\dot{y}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
     
     subplot(3,1,3)
-    plot(t, state(:,6));
+    plot(t(1:length(state(:,1))), state(:,6));
     hold on;
     %plot(t, sampledata(1:n,6));
     ylabel("${\dot{z}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
