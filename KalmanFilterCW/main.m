@@ -128,16 +128,19 @@ end
 if plot3_pos == true
 
     figure(3);
-        hold on;
+
+        [sx, sy, sz] = sphere(1000);
+        surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon, 'EdgeColor',[192/256 192/256 192/256]);
+        hold on
+
         title('3D Position');
-        plot3(state(:,1), state(:,2), state(:,3), 'b')
+        plot3(state(:,1), state(:,2), state(:,3), 'b', 'LineWidth', 3)
         xlabel("x (m)")
         ylabel("y (m)")
         zlabel("z (m)")
         axis equal;
 
-        %[sx, sy, sz] = sphere(1000);
-        %surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon);
+
 
 
     %plot3(sampledata(1:n,1), sampledata(1:n,2), sampledata(1:n,3), 'r')
