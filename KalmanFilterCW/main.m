@@ -28,11 +28,11 @@ t = linspace(t1, t2, N);    % n times from t1 to t1
 
 % The initial estimate state vector for the CW KF
 %x_n_n = sampledata(1,1:6)';
-
+mass_themis = 126;                      % Mass of the Themis Satellites [kg]
 mu_moon = 4.9048695e12;                 % Gravitational parameter of the Moon [m^3 s^-2]
 rad_moon = 1737447.78;                  % Radius of the Moon [m]
 a_moon = 1.74e6+5e4;                    % Semimajor axis of Moon's orbit around Earth [m]
-orbit_alt = rad_moon;                   % Orbit altitude above the moon [m]
+orbit_alt = 50000;                      % Orbit altitude above the moon [m]
 orbit_rad = rad_moon + orbit_alt;       % Orbit radius [m]
 n_mm = sqrt(mu_moon/(a_moon^3));        % Mean motion of the Moon around the Earth [rad/s] 
 alpha = (0*pi) / 180;                   % Phase Angle Alpha of Circular Orbit
@@ -47,26 +47,58 @@ x_n_n = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
 % The initial estimate uncertainty vector for the CW KF
 p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
+%% Generate the Acceleration Measurement
+
+% Generate the Thrust
+thrust_force = sample_thrust_generation(dt);
+
+% Convert the thurst in [N] to Acceleration [m/s^2]
+
+
 
 %% Run the Kalman Filter
 state = [];
 error = [];
 
-for i = 1:N
+% Thrust Variables
+j = 1;
+accel_flag = false;
 
-    % Get the current Measurement
-    % M_n = accel_x_n_n;
-    M_n = x_n_n;
+for i = 1:N
+    % Start thrusting about halfway through the orbit (N/2)
+    if (i > N/2) && (j < length(thrust_force))
+        % Get the acceleration
+        a_x = (thrust_force(j)/mass_themis)*0.5;
+        a_y = (thrust_force(j)/mass_themis)*0.5;
+        a_z = 0;
+
+        % Set the current measurement vector
+        M_n = x_n_n + [0; 0; 0; a_x*dt; a_y*dt; a_z*dt];
+        
+        % Get the current Measurement Error
+        R_n = p_n_n + [0; 0; 0; 1; 1; 1];
+        
+        % Set the accel flag
+        accel_flag = true;
+        
+        % Increment the j index to get the next acceleration
+        j = j + 1;
+    else
+        % Set the current measurement vector
+        M_n = zeros(6,1);
+        
+        % Get the current Measurement Error
+        R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+        
+        % Set the accel flag
+        accel_flag = false;
+    end
     
     % Get the current Input
     U_n = zeros(3,1);
     
-    % Get the current Measurement Error
-    % R_n = accel_p_n_n;
-    R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
-    
     % Run the KF equations for current step
-    [x_n_n, p_n_n] = KF_cw(M_n, U_n, x_n_n, p_n_n, R_n, dt);
+    [x_n_n, p_n_n] = KF_cw(M_n, U_n, x_n_n, p_n_n, R_n, dt, accel_flag);
     
     % Save State and Error
     state = [state; x_n_n'];
@@ -78,14 +110,12 @@ end
 plot_pos_vel = true;
 plot3_pos = true;
 
-
 if plot_pos_vel == true
-
     % figure;
     % title("Acceleration [m/s^2]")
     % plot(t, A)
     
-    figure(1);
+    figure;
     title("Position (m)")
     subplot(3,1,1)
     plot(t(1:length(state(:,1))), state(:,1));
@@ -105,7 +135,7 @@ if plot_pos_vel == true
     %plot(t, sampledata(1:n,3));
     ylabel("z (m)")
     
-    figure(2);
+    figure;
     title("Velocity (m)")
     subplot(3,1,1)
     plot(t(1:length(state(:,1))), state(:,4));
@@ -128,26 +158,80 @@ if plot_pos_vel == true
 end
 
 if plot3_pos == true
+    figure;
+    [sx, sy, sz] = sphere(1000);
+    surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon, 'EdgeColor',[192/256 192/256 192/256]);
+    hold on
 
-    figure(3);
-
-        [sx, sy, sz] = sphere(1000);
-        surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon, 'EdgeColor',[192/256 192/256 192/256]);
-        hold on
-
-        title('3D Position');
-        plot3(state(:,1), state(:,2), state(:,3), 'b', 'LineWidth', 3)
-        xlabel("x (m)")
-        ylabel("y (m)")
-        zlabel("z (m)")
-        axis equal;
-
-
-
-
+    title('3D Position');
+    plot3(state(:,1), state(:,2), state(:,3), 'b', 'LineWidth', 3)
+    xlabel("x (m)")
+    ylabel("y (m)")
+    zlabel("z (m)")
+    axis equal;
+        
     %plot3(sampledata(1:n,1), sampledata(1:n,2), sampledata(1:n,3), 'r')
-
-
 end
 
 toc
+
+
+%% Functions
+function [thrust_newton] = sample_thrust_generation(dt)
+    %% Create Noise
+    timevec = 1:dt:(60*60*2);
+    noisevec = randn(1,length(timevec));
+    func = @(x) noisevec(x);
+
+    %% Create Thrust Curve
+    start = 0:1:20;
+    val1 = zeros(size(start));
+
+    leadup = 20:1:30;
+    val2 = -0.4*(20-leadup);
+
+    peak = 30:1:83;
+    val3 = val2(end)*ones(size(peak));
+
+    leadout = 83:1:93;
+    val4 = 0.4*(93-leadout);
+
+    ending = 93:1:113;
+    val5 = zeros(size(ending));
+
+
+    %% Add white noise
+    sn_white1 = awgn(val1,5);
+    sn_white2(1,1) = sn_white1(end);
+    sn_white2(1,2:size(val2,2)) = awgn(val2(2:end),5);
+    sn_white3(1,1) = sn_white2(end);
+    sn_white3(1,2:size(val3,2)) = awgn(val3(2:end),5);
+    sn_white4(1,1) = sn_white3(end);
+    sn_white4(1,2:size(val4,2)) = awgn(val4(2:end),5);
+    sn_white5(1,1) = sn_white4(end);
+    sn_white5(1,2:size(val5,2)) = awgn(val5(2:end),5);
+
+
+    %% Plot the Thrust
+    figure;
+    plot(start,val1,'--b','LineWidth',1);
+    hold on; grid minor;
+
+    plot(leadup,val2,'--b','LineWidth',1,'HandleVisibility','off');
+    plot(peak,val3,'--b','LineWidth',1,'HandleVisibility','off');
+    plot(leadout,val4,'--b','LineWidth',1,'HandleVisibility','off');
+    plot(ending,val5,'--b','LineWidth',1,'HandleVisibility','off');
+
+    plot(start,sn_white1,'-r','LineWidth',1.5);
+    plot(leadup,sn_white2,'-r','LineWidth',1.5,'HandleVisibility','off');
+    plot(peak,sn_white3,'-r','LineWidth',1.5,'HandleVisibility','off');
+    plot(leadout,sn_white4,'-r','LineWidth',1.5,'HandleVisibility','off');
+    plot(ending,sn_white5,'-r','LineWidth',1.5,'HandleVisibility','off');
+    xlim([0 113]);
+    xlabel('Time [sec]');
+    ylabel('Thrust [N]'); 
+    title('SAMPLE Thrust Curve');
+    legend('Ideal Thrust Curve','Measured Thrust Curve');
+    
+    thrust_newton = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5'];
+end

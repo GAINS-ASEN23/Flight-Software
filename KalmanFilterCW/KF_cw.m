@@ -1,6 +1,6 @@
-function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
+function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t, bool_accel)
 %{
-    Last Edited: Jason Popich 02/28/23
+    Last Edited: Jason Popich 03/09/23
 
     DESCRIPTION
 
@@ -10,6 +10,7 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
         x_n_n - Current Estimated State Vector
         P_n_n - Current Estimated State Uncertainty Matrix
         R_n - Measurement Uncertainty Matrix
+        bool_accel - Acceleration Flag to change the H Matrix
 
     Outputs:
         state - The next time step Estimated State Vector
@@ -42,7 +43,11 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t)
     % G = F*B;
 
     % Define the observation matrix
-    H = zeros(6);
+    if (bool_accel == true)
+        H = [zeros(3) zeros(3); zeros(3) eye(3)];
+    else
+        H = zeros(6);
+    end
     
     % Set errors
     pos_sigma = 1000;              % Position error in [km]
