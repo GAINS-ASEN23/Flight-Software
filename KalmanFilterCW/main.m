@@ -28,7 +28,6 @@ t = linspace(t1, t2, N);    % n times from t1 to t1
 
 % The initial estimate state vector for the CW KF
 %x_n_n = sampledata(1,1:6)';
-mass_themis = 126;                      % Mass of the Themis Satellites [kg]
 mu_moon = 4.9048695e12;                 % Gravitational parameter of the Moon [m^3 s^-2]
 rad_moon = 1737447.78;                  % Radius of the Moon [m]
 a_moon = 1.74e6+5e4;                    % Semimajor axis of Moon's orbit around Earth [m]
@@ -50,10 +49,7 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 %% Generate the Acceleration Measurement
 
 % Generate the Thrust
-thrust_force = sample_thrust_generation(dt);
-
-% Convert the thurst in [N] to Acceleration [m/s^2]
-
+thrust_accel = sample_thrust(dt);
 
 
 %% Run the Kalman Filter
@@ -66,10 +62,10 @@ accel_flag = false;
 
 for i = 1:N
     % Start thrusting about halfway through the orbit (N/2)
-    if (i > N/2) && (j < length(thrust_force))
+    if (i > N/2) && (j < length(thrust_accel))
         % Get the acceleration
-        a_x = (thrust_force(j)/mass_themis)*0.5;
-        a_y = (thrust_force(j)/mass_themis)*0.5;
+        a_x = thrust_accel(j)/mass_themis;
+        a_y = 0;
         a_z = 0;
 
         % Set the current measurement vector

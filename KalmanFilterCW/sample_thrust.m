@@ -1,4 +1,8 @@
-function [thrust_newton] = sample_thrust_generation(dt)
+function [thrust_accel] = sample_thrust(dt)
+    % Returns accelerations in g's, not thrust in newtons
+
+    mass_themis = 126;                      % Mass of the Themis Satellites [kg]
+
     %% Create Noise
     timevec = 1:dt:(60*60*2);
     noisevec = randn(1,length(timevec));
@@ -54,5 +58,5 @@ function [thrust_newton] = sample_thrust_generation(dt)
     title('SAMPLE Thrust Curve');
     legend('Ideal Thrust Curve','Measured Thrust Curve');
     
-    thrust_newton = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5'];
+    thrust_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5']./mass_themis;
 end
