@@ -51,12 +51,13 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 % Generate the Thrust
 [~,thrust_accel] = sample_thrust(dt);
 sigma_thrust = 1;
-fprintf("\n Velocity impluse: %0.3f \n", dt*sum(thrust_accel))
+fprintf("\nVelocity impluse: %0.3f \n", dt*sum(thrust_accel))
 
 %% Run the Kalman Filter to Generate 'Truth Data'
 if isfile("GS_data.mat") == false
-    fprintf("\nGenerating GS data...\n")
+    fprintf("Generating GS data...")
     GS_data()
+    fprintf(" Done! \n")
 end
 
 load GS_data.mat
@@ -116,69 +117,6 @@ end
 plot_pos_vel = true;
 plot3_pos = true;
 
-if plot_pos_vel == true
-    % figure;
-    % title("Acceleration [m/s^2]")
-    % plot(t, A)
-    
-    figure;
-    title("Position (m)")
-    subplot(3,1,1)
-    plot(t(1:length(state(:,1))), state(:,1));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,1));
-    ylabel("x (m)")
-    
-    subplot(3,1,2)
-    plot(t(1:length(state(:,1))), state(:,2));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,2));
-    ylabel("y (m)")
-    
-    subplot(3,1,3)
-    plot(t(1:length(state(:,1))), state(:,3));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,3));
-    ylabel("z (m)")
-    
-    figure;
-    title("Velocity (m)")
-    subplot(3,1,1)
-    plot(t(1:length(state(:,1))), state(:,4));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,4));
-    ylabel("${\dot{x}}$ (m)", 'interpreter', 'latex', 'FontWeight', 'bold')
-    
-    subplot(3,1,2)
-    plot(t(1:length(state(:,1))), state(:,5));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,5));
-    ylabel("${\dot{y}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
-    
-    subplot(3,1,3)
-    plot(t(1:length(state(:,1))), state(:,6));
-    hold on;
-    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,6));
-    ylabel("${\dot{z}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
-
-end
-
-if plot3_pos == true
-    figure;
-    [sx, sy, sz] = sphere(1000);
-    surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon, 'EdgeColor',[192/256 192/256 192/256]);
-    hold on
-
-    title('3D Position');
-    plot3(state(:,1), state(:,2), state(:,3), 'b', 'LineWidth', 3)
-    xlabel("x (m)")
-    ylabel("y (m)")
-    zlabel("z (m)")
-    axis equal;
-        
-    plot3(state_GS(:,1), state_GS(:,2), state_GS(:,3), 'r', 'LineWidth', 1.5)
-
-    %plot3(sampledata(1:n,1), sampledata(1:n,2), sampledata(1:n,3), 'r')
-end
+plot_KF(plot_pos_vel, plot3_pos, state, t, state_GS, t_GS, rad_moon)
 
 toc
