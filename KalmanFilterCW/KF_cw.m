@@ -25,7 +25,7 @@ function [state, error] = KF_cw(M_n, U_n, x_n_n, P_n_n, R_n, t, bool_accel)
     mu_moon = 4.9048695e12;                 % Gravitational parameter of the Moon [m^3 s^-2]
     a_moon = 1.74e6+5e4;                    % Semimajor axis of Moon's orbit around Earth [m]
     
-    % Mean motion of the Moon around the Sun [rad/s] 
+    % Mean motion of the Moon around the Earth [rad/s] 
     n = sqrt(mu_moon/(a_moon^3));
     
     % Define A

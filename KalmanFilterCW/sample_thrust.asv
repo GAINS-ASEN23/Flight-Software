@@ -1,4 +1,4 @@
-function [noisy_accel, ideal_accel] = sample_thrust(dt)
+function [thrust_accel] = sample_thrust(dt)
     % Returns accelerations in g's, not thrust in newtons
 
     mass_themis = 126;                      % Mass of the Themis Satellites [kg]
@@ -58,6 +58,6 @@ function [noisy_accel, ideal_accel] = sample_thrust(dt)
     title('Thrust Curve');
     legend('Ideal Thrust Curve','Measured Thrust Curve');
     
-    ideal_accel = [val1'; val2'; val3'; val4'; val5']./mass_themis;
-    noisy_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5']./mass_themis;
+    ideal_accel = [val1'; val2'; val3'; val4'; val5]
+    thrust_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5']./mass_themis;
 end

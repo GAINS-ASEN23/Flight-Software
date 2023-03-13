@@ -49,8 +49,17 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 %% Generate the Acceleration Measurement
 
 % Generate the Thrust
-thrust_accel = sample_thrust(dt);
+[~,thrust_accel] = sample_thrust(dt);
 sigma_thrust = 1;
+fprintf("\n Velocity impluse: %0.3f \n", dt*sum(thrust_accel))
+
+%% Run the Kalman Filter to Generate 'Truth Data'
+if isfile("GS_data.mat") == false
+    fprintf("\nGenerating GS data...\n")
+    GS_data()
+end
+
+load GS_data.mat
 
 
 %% Run the Kalman Filter
@@ -117,19 +126,19 @@ if plot_pos_vel == true
     subplot(3,1,1)
     plot(t(1:length(state(:,1))), state(:,1));
     hold on;
-    %plot(t, sampledata(1:n,1));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,1));
     ylabel("x (m)")
     
     subplot(3,1,2)
     plot(t(1:length(state(:,1))), state(:,2));
     hold on;
-    %plot(t, sampledata(1:n,2));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,2));
     ylabel("y (m)")
     
     subplot(3,1,3)
     plot(t(1:length(state(:,1))), state(:,3));
     hold on;
-    %plot(t, sampledata(1:n,3));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,3));
     ylabel("z (m)")
     
     figure;
@@ -137,19 +146,19 @@ if plot_pos_vel == true
     subplot(3,1,1)
     plot(t(1:length(state(:,1))), state(:,4));
     hold on;
-    %plot(t, sampledata(1:n,4));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,4));
     ylabel("${\dot{x}}$ (m)", 'interpreter', 'latex', 'FontWeight', 'bold')
     
     subplot(3,1,2)
     plot(t(1:length(state(:,1))), state(:,5));
     hold on;
-    %plot(t, sampledata(1:n,5));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,5));
     ylabel("${\dot{y}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
     
     subplot(3,1,3)
     plot(t(1:length(state(:,1))), state(:,6));
     hold on;
-    %plot(t, sampledata(1:n,6));
+    plot(t_GS(1:length(state_GS(:,1))), state_GS(:,6));
     ylabel("${\dot{z}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
 
 end
@@ -167,6 +176,8 @@ if plot3_pos == true
     zlabel("z (m)")
     axis equal;
         
+    plot3(state_GS(:,1), state_GS(:,2), state_GS(:,3), 'r', 'LineWidth', 1.5)
+
     %plot3(sampledata(1:n,1), sampledata(1:n,2), sampledata(1:n,3), 'r')
 end
 
