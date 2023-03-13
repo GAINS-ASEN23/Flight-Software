@@ -9,19 +9,19 @@ function [thrust_accel] = sample_thrust(dt)
     func = @(x) noisevec(x);
 
     %% Create Thrust Curve
-    start = 0:1:20;
+    start = 0:dt:20;
     val1 = zeros(size(start));
 
-    leadup = 20:1:30;
+    leadup = 20:dt:30;
     val2 = -0.4*(20-leadup);
 
-    peak = 30:1:83;
+    peak = 30:dt:83;
     val3 = val2(end)*ones(size(peak));
 
-    leadout = 83:1:93;
+    leadout = 83:dt:93;
     val4 = 0.4*(93-leadout);
 
-    ending = 93:1:113;
+    ending = 93:dt:113;
     val5 = zeros(size(ending));
 
 
@@ -55,7 +55,7 @@ function [thrust_accel] = sample_thrust(dt)
     xlim([0 113]);
     xlabel('Time [sec]');
     ylabel('Thrust [N]'); 
-    title('SAMPLE Thrust Curve');
+    title('Thrust Curve');
     legend('Ideal Thrust Curve','Measured Thrust Curve');
     
     thrust_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5']./mass_themis;

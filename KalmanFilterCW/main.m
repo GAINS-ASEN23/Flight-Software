@@ -50,6 +50,7 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 % Generate the Thrust
 thrust_accel = sample_thrust(dt);
+sigma_thrust = 1;
 
 
 %% Run the Kalman Filter
@@ -64,15 +65,15 @@ for i = 1:N
     % Start thrusting about halfway through the orbit (N/2)
     if (i > N/2) && (j < length(thrust_accel))
         % Get the acceleration
-        a_x = thrust_accel(j)/mass_themis;
+        a_x = thrust_accel(j);
         a_y = 0;
         a_z = 0;
 
         % Set the current measurement vector
-        M_n = x_n_n + [0; 0; 0; a_x*dt; a_y*dt; a_z*dt];
+        M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
         
         % Get the current Measurement Error
-        R_n = p_n_n + [0; 0; 0; 1; 1; 1];
+        R_n = p_n_n + [0; 0; 0; sigma_thrust; sigma_thrust; sigma_thrust];
         
         % Set the accel flag
         accel_flag = true;
