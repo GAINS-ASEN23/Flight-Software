@@ -15,8 +15,7 @@ clc;
 close all;
 tic;
 
-%% Sample Data
-% sampledata = readmatrix("StarTrackerSample.csv");
+%% Timestep
 
 N = 30000;                  % Number of data points
 dt = 2;                     % Time step
@@ -48,12 +47,12 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
 
-% Generate the Thrust
 [~,thrust_accel] = sample_thrust(dt);
 sigma_thrust = 1;
 fprintf("\nVelocity impluse: %0.3f \n", dt*sum(thrust_accel))
 
 %% Run the Kalman Filter to Generate 'Truth Data'
+
 if isfile("GS_data.mat") == false
     fprintf("Generating GS data...")
     GS_data()
@@ -61,7 +60,6 @@ if isfile("GS_data.mat") == false
 end
 
 load GS_data.mat
-
 
 %% Run the Kalman Filter
 state = [];
@@ -74,16 +72,18 @@ accel_flag = false;
 for i = 1:N
     % Start thrusting about halfway through the orbit (N/2)
     if (i > N/2) && (j < length(thrust_accel))
+
         % Get the acceleration
-        a_x = thrust_accel(j);
-        a_y = 0;
-        a_z = 0;
+        accel_norm = thrust_accel(j).*x_n_n(1:3)./norm(x_n_n(1:3));
+        a_x = accel_norm(1);
+        a_y = accel_norm(2);
+        a_z = accel_norm(3);
 
         % Set the current measurement vector
         M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
         
         % Get the current Measurement Error
-        R_n = p_n_n + [0; 0; 0; sigma_thrust; sigma_thrust; sigma_thrust];
+        R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)] + [0; 0; 0; sigma_thrust; sigma_thrust; sigma_thrust];
         
         % Set the accel flag
         accel_flag = true;
