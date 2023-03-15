@@ -7,11 +7,11 @@
  * Space Packet Protocol Decoder
  */
 
-#include <GAINSEthernet.h>
+//#include <GAINSEthernet.h>
 
-void SSP_decode()
+/*void SPP_decode()
 {
 
 
 
-}
+}*/

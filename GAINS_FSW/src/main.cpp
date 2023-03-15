@@ -10,22 +10,41 @@
 
 #include <Arduino.h>
 #include <GAINSKF.h>
+#include <GAINSEthernet.h>
 
 
 void setup()
 {
+
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(115200);
-}
 
-
-void loop() 
-{
 	delay(1000);
 	Serial.println("Initialized...");
 
 	delay(500);
 
+	int eth_err_code = ETH_init();
+	if(1 == eth_err_code){
+		Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+	} else if(2 == eth_err_code){
+		Serial.println("Ethernet cable is not connected.");
+	}
+
+}
+
+
+void loop() 
+{
+	//delay(1000);
+	//Serial.println("Initialized...");
+	//delay(500);
+	delay(10);
+	int packetSize = UDP_receive();
+	if(packetSize > 0){
+		UDP_send();
+	}
+	/*
 	for (size_t i = 0; i < 1000; i++)
 	{
 	
@@ -63,7 +82,8 @@ void loop()
 		delay(1000);
 
 	}
+	*/
 
-	exit(0);
+	//exit(0);
 
 }

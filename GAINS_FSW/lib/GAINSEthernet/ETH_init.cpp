@@ -7,18 +7,14 @@
  * Ethernet Initializer
  */
 
+/*
 #include <GAINSEthernet.h>
 
 int ETH_init()
 {
 // start the Ethernet
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac1, ip1);
 
-  // Open serial communications and wait for port to open:
-  //Serial.begin(9600);
-  /*while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }*/
 
   // Check for Ethernet hardware present
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
@@ -34,7 +30,8 @@ int ETH_init()
   }
 
   // start UDP
-  Udp.begin(localPort);
-
+  Udp1.begin(localPort1);
+  return 0;
 
 }
+*/
