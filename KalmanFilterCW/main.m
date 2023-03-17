@@ -75,15 +75,15 @@ for i = 1:N
 
         % Get the acceleration
         accel_norm = thrust_accel(j).*x_n_n(1:3)./norm(x_n_n(1:3));
-        a_x = accel_norm(1);
-        a_y = accel_norm(2);
-        a_z = accel_norm(3);
+        a_x = -accel_norm(1);
+        a_y = -accel_norm(2);
+        a_z = -accel_norm(3);
 
         % Set the current measurement vector
         M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
         
         % Get the current Measurement Error
-        R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)] + [0; 0; 0; sigma_thrust; sigma_thrust; sigma_thrust];
+        R_n = p_n_n + [zeros(3) zeros(3); zeros(3) eye(3)*sigma_thrust];
         
         % Set the accel flag
         accel_flag = true;
