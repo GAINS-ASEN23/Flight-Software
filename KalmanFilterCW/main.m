@@ -128,7 +128,7 @@ for i = 1:N
     t2 = t(i);
 
     % Run the KF equations for current step
-    [x_n_n, p_n_n] = KF_cw(Q, M_n, U_n, x_n_n, p_n_n, R_n, dt, t1, t2, false);
+    [x_n_n, p_n_n] = KF_cw(n_mm, Q, M_n, U_n, x_n_n, p_n_n, R_n, dt, t1, t2, false);
     
     % Save State and Error
     state = [state; x_n_n'];
@@ -145,10 +145,9 @@ deputy_state = chief_state + state;
 %% Plot Results
 
 plot_1(state, t, "Deputy Deviations From Chief Orbit [Hill Frame]")
-plot_1(chief_state, t, "Chief")
-plot_1(deputy_state, t, "Deputy")
 plot_1_3D(state, "Deputy Deviations From Chief Orbit [Hill Frame]")
-
+% plot_1(chief_state, t, "Chief")
+% plot_1(deputy_state, t, "Deputy")
 
 labels1 = ["Chief Vs Deputy Orbits", "Chief", "Deputy"];
 plot_2(chief_state, deputy_state, t, labels1)
