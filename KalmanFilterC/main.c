@@ -31,7 +31,7 @@ int main()
     float n = sqrt(mu_moon/(pow(orbit_rad,3)));     // Mean motion of the Moon around the Earth [rad/s] 
 
     // State and Uncertainty Matricies
-    float X_n_p_1_n[n_x];                   // Current Predicted State vector
+    float x_n_p_1_n[n_x];                   // Current Predicted State vector
     float P_n_p_1_n[n_x*n_x];               // Current Predicted Uncertainty Matrix
 
     float P_n_n[n_x*n_x];                   // Estimate Uncertainty Matrix
@@ -64,13 +64,13 @@ int main()
     eye(Q, n_x);
     eye(H, n_x);
     eye(P_n_n, n_x);
-    eye(x_n_n, n_x);
     eye(R_n, n_z);
 
     // 6x1
     for(int j = 0; j < n_z; j++)
     {
         z_n[j] = 0; 
+        x_n_n[j] = 1;
     }
         
     // 3x1
@@ -87,8 +87,25 @@ int main()
     H[28] = 0;
     H[35] = 0;
 
-    print(H, n_x, n_x);
-    printf("%x\n\n", H);
+    // Fill Out B
+    B[0] = 0;
+    B[1] = 0;
+    B[2] = 0;
+    B[3] = 0;
+    B[4] = 0;
+    B[5] = 0;
+    B[6] = 0;
+    B[7] = 0;
+    B[8] = 0;
+    B[9] = 1;
+    B[10] = 0;
+    B[11] = 0;
+    B[12] = 0;
+    B[13] = 1;
+    B[14] = 0;
+    B[15] = 0;
+    B[16] = 0;
+    B[17] = 1;
 
     /*********************************************/
 	clock_t start, end;
@@ -99,13 +116,38 @@ int main()
     // Update the matrices for this time step
     update_constant_matrices(n_x, n_u, F, FT, G, Gamma, B, n, 0, 0.01);
 
+    // printf("G: \n");
+    // print(F, n_x, n_x);
+
+    // printf("FT: \n");
+    // print(FT, n_x, n_x);
+
+    // printf("Gamma: \n");
+    // print(Gamma, n_x, n_x);
+
+    // printf("B: \n");
+    // print(B, n_x, n_u);
+
+    // printf("G: \n");
+    // print(G, n_x, n_u);
+
     /*********************************************/
     /*****  X_n_p_1_n = F * X_n_n + G * U_n  *****/
-    predict_state(n_x, X_n_p_1_n, F, x_n_n, G, u_n);
+    predict_state(n_x, x_n_p_1_n, F, x_n_n, G, u_n);
 
-    // print(x_n_n, n_x, n_x);
+    // printf("x_n_n: \n");
+    // print(x_n_n, n_x, 1);
+
+    // printf("x_n_p_1_n: \n");
+    // print(x_n_p_1_n, n_x, 1);
+
+    // printf("F: \n");
     // print(F, n_x, n_x);
-    // print(G, n_x, n_z);
+
+    // printf("G: \n");
+    // print(G, n_x, n_u);
+
+    // printf("u_n: \n");
     // print(u_n, n_u, 1);
 
     /*********************************************/
@@ -113,27 +155,57 @@ int main()
 
     predict_uncertainty(n_x, P_n_p_1_n, F, FT, P_n_n, Q);
 
-    print(P_n_n, n_x, n_x);
-    print(F, n_x, n_x);
-    print(P_n_p_1_n, n_x, n_x);
+    // printf("P_n_n: \n");
+    // print(P_n_n, n_x, n_x);
+
+    // printf("P_n_p_1_n: \n");
+    // print(P_n_p_1_n, n_x, n_x);
+
+    // printf("F: \n");
+    // print(F, n_x, n_x);
+
+    // printf("Q: \n");
+    // print(Q, n_x, n_x);
 
     /********************************************************************/
     /*****  K_n = P_n_n_m_1 * H^T * (H * P_n_n_m_1 * H^T + R_n)^-1  *****/
 
-    printf("\n\n%x\n\n", H);
-    print(H, n_x, n_x);
+    compute_kalman_gain(n_x, n_z, K_n, P_n_p_1_n, H, R_n);
 
-    // compute_kalman_gain(n_x, n_z, K_n, P_n_p_1_n, H, R_n);
+    // printf("K_n: \n");
     // print(K_n, n_x, n_z);
+
+    // printf("P_n_p_1_n: \n");
     // print(P_n_n, n_x, n_x);
-    // print(P_n_n, n_x, n_x);
+
+    // printf("H: \n");
+    // print(H, n_z, n_x);
+
+    // printf("R_n: \n");
+    // print(R_n, n_x, n_x);
     
     /*************************************************************************************/
     /*****  P_n_n = (I - K_n * H) * P_n_n_m_1 * (I - K_n * H)^T + K_n * R_n * K_n^T  *****/
 
-    // estimate_uncertainty(n_x, n_u, P_n_n, K_n, P_n_p_1_n, H, R_n, I_SS);
+    estimate_uncertainty(n_x, n_u, P_n_n, K_n, P_n_p_1_n, H, R_n, I_SS);
 
+    // printf("P_n_n: \n");
     // print(P_n_n, n_x, n_x);
+
+    // printf("K_n: \n");
+    // print(K_n, n_x, n_z);
+
+    // printf("P_n_p_1_n: \n");
+    // print(P_n_n, n_x, n_x);
+
+    // printf("H: \n");
+    // print(H, n_z, n_x);
+
+    // printf("R_n: \n");
+    // print(R_n, n_x, n_x);
+
+    // printf("I_SS: \n");
+    // print(I_SS, n_x, n_x);
 
     /*********************************************/
 	end = clock();

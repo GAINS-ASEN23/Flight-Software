@@ -27,6 +27,10 @@ void predict_state(uint8_t state_size, float x_n_p_1_n[], float F[], float x_n_n
     float FX_n_n[state_size];
     float GU_n[state_size];
 
+    // Set the memory for the temp vars
+    memset(FX_n_n, 0, state_size*sizeof(float));
+    memset(GU_n, 0, state_size*sizeof(float));
+
     // F*x_n_n
     mul(F, x_n_n, FX_n_n, state_size, state_size, 1);
 
@@ -45,6 +49,10 @@ void predict_uncertainty(uint8_t state_size, float P_n_p_1_n[], float F[], float
     // Declare temp vars
     float FP_n_n[state_size*state_size];
     float FP_n_nFT[state_size*state_size];
+
+    // Set the memory for the temp vars
+    memset(FP_n_n, 0, state_size*state_size*sizeof(float));
+    memset(FP_n_nFT, 0, state_size*state_size*sizeof(float));
 
     // FP_n_n = F * P_n_n
     mul(F, P_n_n, FP_n_n, state_size, state_size, state_size);
@@ -68,30 +76,37 @@ void compute_kalman_gain(uint8_t state_size, uint8_t measurement_num, float K_n[
     float HP_n_n_m_1HTR_n[measurement_num*measurement_num];
     float HT[measurement_num*state_size];
 
+    // Set the memory for the temp vars
+    memset(P_n_n_m_1HT, 0, state_size*state_size*sizeof(float));
+    memset(HP_n_n_m_1, 0, measurement_num*state_size*sizeof(float));
+    memset(HP_n_n_m_1HT, 0, measurement_num*measurement_num*sizeof(float));
+    memset(HP_n_n_m_1HTR_n, 0, measurement_num*measurement_num*sizeof(float));
+    memset(HT, 0, measurement_num*state_size*sizeof(float));
+
     // HT = H^T
-    // copy(H, HT, state_size*measurement_num);
-    // tran(HT, state_size, measurement_num);
+    copy(H, HT, state_size*measurement_num);
+    tran(HT, state_size, measurement_num);
 
-    // // P_n_n_m_1HT = P_n_n_m_1 * HT
-    // mul(P_n_n_m_1, HT, P_n_n_m_1HT, state_size, state_size, measurement_num);
+    // P_n_n_m_1HT = P_n_n_m_1 * HT
+    mul(P_n_n_m_1, HT, P_n_n_m_1HT, state_size, state_size, measurement_num);
 
-    // // HP_n_n_m_1 = H * P_n_n_m_1
-    // mul(H, P_n_n_m_1, HP_n_n_m_1, measurement_num, state_size, state_size);
+    // HP_n_n_m_1 = H * P_n_n_m_1
+    mul(H, P_n_n_m_1, HP_n_n_m_1, measurement_num, state_size, state_size);
 
-    // // HP_n_n_m_1HT = HP_n_n_m_1 * HT
-    // mul(HP_n_n_m_1, HT, HP_n_n_m_1HT, measurement_num, state_size, measurement_num);
+    // HP_n_n_m_1HT = HP_n_n_m_1 * HT
+    mul(HP_n_n_m_1, HT, HP_n_n_m_1HT, measurement_num, state_size, measurement_num);
 
-    // // HP_n_n_m_1HTR_n = HP_n_n_m_1HT + R_n
-    // add(HP_n_n_m_1HT, R_n, HP_n_n_m_1HTR_n, measurement_num*measurement_num);
+    // HP_n_n_m_1HTR_n = HP_n_n_m_1HT + R_n
+    add(HP_n_n_m_1HT, R_n, HP_n_n_m_1HTR_n, measurement_num*measurement_num);
 
-    // // Invert HP_n_n_m_1HTR_n
-    // if(inv(HP_n_n_m_1HTR_n, measurement_num) == 0)
-    // {
-    //     printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
-    // }
+    // Invert HP_n_n_m_1HTR_n
+    if(inv(HP_n_n_m_1HTR_n, measurement_num) == 0)
+    {
+        printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
+    }
 
-    // // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
-    // mul(P_n_n_m_1HT, HP_n_n_m_1HTR_n, K_n, state_size, measurement_num, measurement_num);
+    // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
+    mul(P_n_n_m_1HT, HP_n_n_m_1HTR_n, K_n, state_size, measurement_num, measurement_num);
 }
 
 void estimate_state(uint8_t state_size, uint8_t measurement_num, float x_n_n[], float x_n_p_1_n[], float K_n[], float z_n[], float H[])
@@ -99,9 +114,15 @@ void estimate_state(uint8_t state_size, uint8_t measurement_num, float x_n_n[], 
     /*                    Equation                       */
     /*  X_n_n = x_n_p_1_n + K_n * (Z_n - H * x_n_p_1_n)  */
 
+    // Declare the temp vars
     float HX_n_n_m_1[measurement_num];
     float Z_nHX_n_n_m_1[measurement_num];
     float K_nZ_nHX_n_n_m_1[state_size];
+
+    // Set the memory for the temp vars
+    memset(HX_n_n_m_1, 0, measurement_num*sizeof(float));
+    memset(Z_nHX_n_n_m_1, 0, measurement_num*sizeof(float));
+    memset(K_nZ_nHX_n_n_m_1, 0, state_size*sizeof(float));
 
     // HX_n_n_m_1 = H * x_n_p_1_n
     mul(H, x_n_p_1_n, HX_n_n_m_1, measurement_num, state_size, 1);
@@ -121,6 +142,7 @@ void estimate_uncertainty(uint8_t state_size, uint8_t measurement_num, float P_n
     /*                                Equation                                   */
     /*  P_n_n = (I - K_n * H) * P_n_n_m_1 * (I - K_n * H)^T + K_n * R_n * K_n^T  */
 
+    // Declare Temp Vars
     float K_nH[state_size*state_size];
     float IK_nH[state_size*state_size];
     float IK_nHT[state_size*state_size];
@@ -129,6 +151,16 @@ void estimate_uncertainty(uint8_t state_size, uint8_t measurement_num, float P_n
     float K_nT[measurement_num*state_size];
     float K_nR_n[state_size*measurement_num];
     float K_nR_nK_nT[state_size*measurement_num];
+
+    // Set the memory for the temp vars
+    memset(K_nH, 0, state_size*state_size*sizeof(float));
+    memset(IK_nH, 0, state_size*state_size*sizeof(float));
+    memset(IK_nHT, 0, state_size*state_size*sizeof(float));
+    memset(IK_nHP_n_n_m_1, 0, state_size*state_size*sizeof(float));
+    memset(IK_nHP_n_n_m_1IK_nHT, 0, state_size*state_size*sizeof(float));
+    memset(K_nT, 0, measurement_num*state_size*sizeof(float));
+    memset(K_nR_n, 0, state_size*measurement_num*sizeof(float));
+    memset(K_nR_nK_nT, 0, state_size*measurement_num*sizeof(float));
 
     // K_nH = K_n * H
     mul(K_n, H, K_nH, state_size, measurement_num, state_size);
