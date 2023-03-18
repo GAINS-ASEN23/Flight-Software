@@ -1,4 +1,4 @@
-function [state, error] = KF_cw(Q, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn, ground_data)
+function [state, error] = KF_cw(n, Q, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn, ground_data)
 %{
     Last Edited: Bennett Grow 3/17/23
 
