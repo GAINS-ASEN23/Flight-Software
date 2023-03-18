@@ -92,9 +92,9 @@ for i = 1:N
         a_y = accel(2);
         a_z = accel(3);
 
-%         a_x = thrust_accel(j);
-%         a_y = 0;
-%         a_z = 0;
+        a_x = thrust_accel(j);
+        a_y = 0;
+        a_z = 0;
 
         % Set the current measurement vector
         %M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
@@ -147,6 +147,8 @@ deputy_state = chief_state + state;
 plot_1(state, t, "Deputy Deviations From Chief Orbit [Hill Frame]")
 plot_1(chief_state, t, "Chief")
 plot_1(deputy_state, t, "Deputy")
+plot_1_3D(state, "Deputy Deviations From Chief Orbit [Hill Frame]")
+
 
 labels1 = ["Chief Vs Deputy Orbits", "Chief", "Deputy"];
 plot_2(chief_state, deputy_state, t, labels1)
