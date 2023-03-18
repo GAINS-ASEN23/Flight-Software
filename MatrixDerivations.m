@@ -18,12 +18,15 @@ Gamma3 = subs(Gamma2, t1 - t2, -dt);
 Gamma1_latex = latex(Gamma1);
 Gamma3_latex = latex(Gamma3);
 
+Gamma1_h = matlabFunction(Gamma1);
+
 % B
 B = [zeros(3);eye(3)];
 
 % G
 G = Gamma3*B;
 G_latex = latex(G);
+G_func = matlabFunction(G);
 
 
 
@@ -31,22 +34,6 @@ G_latex = latex(G);
 
 
 % Q
-% Q_a = sym(zeros(6));
-% Q_a(1,1) = sigma_{1}^2;
-% Q_a(2,2) = sigma_{2}^2;
-% Q_a(3,3) = sigma_{3}^2;
-% Q_a(4,4) = sigma_{4}^2;
-% Q_a(5,5) = sigma_{5}^2;
-% Q_a(6,6) = sigma_{6}^2;
-
-% Q_a = sym(zeros(6,1));
-% Q_a(1) = sigma_1^2;
-% Q_a(2) = sigma_2^2;
-% Q_a(3) = sigma_3^2;
-% Q_a(4) = sigma_4^2;
-% Q_a(5) = sigma_5^2;
-% Q_a(6) = sigma_6^2;
-
 Q_a = sym(zeros(3));
 Q_a(1,1) = sigma_ax^2;
 Q_a(2,2) = sigma_ay^2;
@@ -54,7 +41,7 @@ Q_a(3,3) = sigma_az^2;
 
 Q = F*(B*Q_a*B')*F';
 Q_latex = latex(Q);
-
+Q_h = matlabFunction(Q);
 
 
 

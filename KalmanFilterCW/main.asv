@@ -15,8 +15,7 @@ clc;
 close all;
 tic;
 
-%% Sample Data
-% sampledata = readmatrix("StarTrackerSample.csv");
+%% Timestep
 
 N = 30000;                  % Number of data points
 dt = 2;                     % Time step
@@ -48,12 +47,12 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
 
-% Generate the Thrust
 [~,thrust_accel] = sample_thrust(dt);
 sigma_thrust = 1;
 fprintf("\nVelocity impluse: %0.3f \n", dt*sum(thrust_accel))
 
 %% Run the Kalman Filter to Generate 'Truth Data'
+
 if isfile("GS_data.mat") == false
     fprintf("Generating GS data...")
     GS_data()
@@ -61,7 +60,6 @@ if isfile("GS_data.mat") == false
 end
 
 load GS_data.mat
-
 
 %% Run the Kalman Filter
 state = [];
@@ -71,45 +69,64 @@ error = [];
 j = 1;
 accel_flag = false;
 
+% Accelerator Process Noise Std. Dev.
+sigma_a = [0.1; 0.1
+
+% Process Noise Covariance Matrix
+Q_func = @(dt,n,sigma_ax,sigma_ay,sigma_az)reshape([1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).^2+1.0./n.^2.*sigma_ay.^2.*(cos(dt.*n)-1.0).^2.*4.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,0.0,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,0.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,1.0./n.^2.*sigma_ax.^2.*(cos(dt.*n)-1.0).^2.*4.0+1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).^2,0.0,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,0.0,0.0,1.0./n.^2.*sigma_az.^2.*sin(dt.*n).^2,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,0.0,sigma_ax.^2.*cos(dt.*n).^2+sigma_ay.^2.*sin(dt.*n).^2.*4.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,0.0,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,sigma_ax.^2.*sin(dt.*n).^2.*4.0+sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).^2,0.0,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,0.0,0.0,sigma_az.^2.*cos(dt.*n).^2],[6,6]);
+Q = Q_func(dt,n,sigma_a(1),sigma_a(2),sigma_a(3))
+
 for i = 1:N
     % Start thrusting about halfway through the orbit (N/2)
     if (i > N/2) && (j < length(thrust_accel))
-        if j == 1
-            x_n_n_begin_thrust = x_n_n
-        end
+
         % Get the acceleration
         accel_norm = thrust_accel(j).*x_n_n(1:3)./norm(x_n_n(1:3));
-        a_x = accel_norm(1);
-        a_y = accel_norm(2);
-        a_z = accel_norm(3);
+        a_x = -accel_norm(1);
+        a_y = -accel_norm(2);
+        a_z = -accel_norm(3);
 
         % Set the current measurement vector
-        M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
+        %M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
         
         % Get the current Measurement Error
-        R_n = p_n_n + [0; 0; 0; sigma_thrust; sigma_thrust; sigma_thrust];
+        %R_n = p_n_n + [zeros(3) zeros(3); zeros(3) eye(3)*sigma_thrust];
         
+        % Control Input
+        U_n = [a_x; a_y; a_z];
+
         % Set the accel flag
         accel_flag = true;
         
         % Increment the j index to get the next acceleration
         j = j + 1;
+
     else
-        % Set the current measurement vector
-        M_n = zeros(6,1);
-        
-        % Get the current Measurement Error
-        R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+        % Control Input
+        U_n = zeros(3,1);
         
         % Set the accel flag
         accel_flag = false;
+
+        % Control Input
+        U_n = zeros(3,1);
     end
     
-    % Get the current Input
-    U_n = zeros(3,1);
+    % Set the current measurement vector
+    M_n = zeros(6,1);
     
+    % Get the current Measurement Error
+    R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+    
+    if i == 1
+        t1 = 0;
+    else
+        t1 = t(i-1);
+    end
+    t2 = t(i);
+
     % Run the KF equations for current step
-    [x_n_n, p_n_n] = KF_cw(M_n, U_n, x_n_n, p_n_n, R_n, dt, accel_flag);
+    [x_n_n, p_n_n] = KF_cw(Q, M_n, U_n, x_n_n, p_n_n, R_n, dt, t1, t2, accel_flag);
     
     % Save State and Error
     state = [state; x_n_n'];
