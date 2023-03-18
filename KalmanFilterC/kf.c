@@ -10,10 +10,6 @@ Description : This file contains the Kalman Filter (KF) function definitions
 
 #include "kf.h"
 
-// Pre-Declare static voids
-static void compute_state_transition_matrix(float F[], float n, float t1, float t2);
-static void compute_gamma_matrix(float Gamma[], float n, float t1, float t2);
-
 /*********************************************/
 /*      MAIN KALMAN FILTER FUNCTIONS         */
 /*********************************************/
@@ -197,23 +193,26 @@ void estimate_uncertainty(uint8_t state_size, uint8_t measurement_num, float P_n
 /*      KALMAN FILTER SUPPORT FUNCTIONS      */
 /*********************************************/
 
-void update_constant_matrices(uint8_t state_size, uint8_t measurement_num, float F[], float FT[], float G[], float Gamma[], float B[], float n, float t1, float t2)
-{
-    // Update the State Transition Matrix
-    compute_state_transition_matrix(F, n, t1, t2);
+// void update_constant_matrices(uint8_t state_size, uint8_t measurement_num, float F[], float FT[], float G[], float Gamma[], float B[], float n, float t1, float t2)
+// {
+//     // Update the State Transition Matrix
+//     compute_state_transition_matrix(F, n, t1, t2);
 
-    // Calculate the Tranpose of F
-    copy(F, FT, state_size*state_size);
-    tran(FT, state_size, state_size);
+//     // Calculate the Tranpose of F
+//     copy(F, FT, state_size*state_size);
+//     tran(FT, state_size, state_size);
 
-    // Update the Gamma Matrix
-    compute_gamma_matrix(Gamma, n, t1, t2);
+//     // Update the Gamma Matrix
+//     compute_gamma_matrix(Gamma, n, t1, t2);
 
-    // Update the G Matrix
-    mul(Gamma, B, G, state_size, state_size, measurement_num);
-}
+//     // Update the G Matrix
+//     mul(Gamma, B, G, state_size, state_size, measurement_num);
 
-static void compute_state_transition_matrix(float F[], float n, float t1, float t2)
+//     // Update the process noise covariance matrix
+//     compute_process_noise_covariance_matrix(state_size, input_num, Q, F, FT, B, BT, Q_a);
+// }
+
+void compute_state_transition_matrix(float F[], float n, float t1, float t2)
 {
     // Calculate dt
     float dt = t2 - t1;
@@ -269,7 +268,7 @@ static void compute_state_transition_matrix(float F[], float n, float t1, float 
     F[35] = cos(dt*n);
 }
 
-static void compute_gamma_matrix(float Gamma[], float n, float t1, float t2)
+void compute_gamma_matrix(float Gamma[], float n, float t1, float t2)
 {
     // Compute dt
     float dt = t2 - t1;
@@ -323,4 +322,32 @@ static void compute_gamma_matrix(float Gamma[], float n, float t1, float t2)
     Gamma[33] = 0;
     Gamma[34] = 0;
     Gamma[35] = (1/n)*sin(dt*n);
+}
+
+void compute_process_noise_covariance_matrix(uint8_t state_size, uint8_t input_num, float Q[], float F[], float FT[], float B[], float BT[], float Q_a[])
+{
+    /*            Equation             */
+    /*  Q = F * (B * Q_a * B^T) * F^T  */
+
+    // Declare Temp Vars
+    float BQ_a[state_size*input_num];
+    float BQ_aBT[state_size*state_size];
+    float FBQ_aBT[state_size*state_size];
+
+    // Set the memory for the temp vars
+    memset(BQ_a, 0, state_size*input_num*sizeof(float));
+    memset(BQ_aBT, 0, state_size*state_size*sizeof(float));
+    memset(FBQ_aBT, 0, state_size*state_size*sizeof(float));
+
+    // BQ_a = B * Q_a
+    mul(B, Q_a, BQ_a, state_size, input_num, input_num);
+
+    // BQ_aBT = BQ_a * B^T
+    mul(BQ_a, BT, BQ_aBT, state_size, input_num, state_size);
+
+    // FBQ_aBT = F * BQ_aBT
+    mul(F, BQ_aBT, FBQ_aBT, state_size, state_size, state_size);
+
+    // Q = FBQ_aBT * FT
+    mul(FBQ_aBT, FT, Q, state_size, state_size, state_size);
 }

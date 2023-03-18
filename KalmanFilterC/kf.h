@@ -34,6 +34,12 @@ Description : This file contains the Kalman Filter (KF) function declarations
 /****************************************************************************************/
 void update_constant_matrices(uint8_t state_size, uint8_t input_num, float F[], float FT[], float G[], float Gamma[], float B[], float n, float t1, float t2);
 
+
+void compute_state_transition_matrix(float F[], float n, float t1, float t2);
+void compute_gamma_matrix(float Gamma[], float n, float t1, float t2);
+void compute_process_noise_covariance_matrix(uint8_t state_size, uint8_t input_num, float Q[], float F[], float FT[], float B[], float BT[], float Q_a[]);
+
+
 /* MAIN KALMAN FUNCTIONS */
 
 /****************************************************************************************/
@@ -138,5 +144,8 @@ void estimate_state(uint8_t state_size, uint8_t input_num, float x_n_n[], float 
 /*                                                                                      */
 /****************************************************************************************/
 void estimate_uncertainty(uint8_t state_size, uint8_t input_num, float P_n_n[], float K_n[], float P_n_n_m_1[], float H[], float R_n[], float I_SS[]);
+
+
+
 
 #endif

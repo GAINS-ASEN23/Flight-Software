@@ -19,6 +19,9 @@ int main()
 {
     /*****  VARIABLE DECLARATION & PREALLOCATION  *****/
 
+    float t1 = 0;                           // Sample Time begin
+    float t2 = 0.01;                        // Sample Time end
+
     uint16_t n_u = 3;                       // Number of deterministic inputs (3 - accelerations x,y,z)
     uint16_t n_x = 6;                       // Number of States (x, y, z, x_dot, y_dot, z_dot)
     uint16_t n_z = 6;                       // Number of measured states (x_g, y_g, z_g, x_dot_g, y_dot_g, z_dot_g)
@@ -47,12 +50,14 @@ int main()
 
     float G[n_x*n_u];                       // Control Matrix
     float B[n_x*n_u];                       // Control Observation Matrix
+    float BT[n_u*n_x];                      // Transposed Control Observation Matrix
     float Gamma[n_x*n_x];                   // Gamma Matrix (No other name??) 
 
     float H[n_z*n_x];                       // Observation Matrix
     float HT[n_z*n_x];                      // Transposed Observation Matrix
 
     float Q[n_x*n_x];                       // Process Noise Matrix
+    float Q_a[n_u*n_u];                     // Input Noise Matrix
     float R_n[n_z*n_z];                     // Measurement Noise Covariance Matrix
     float K_n[n_x*n_z];                     // Kalman gain
     float I_SS[n_x*n_z];                    // Idenitity matrix (for K_n)
@@ -61,7 +66,6 @@ int main()
 
     // Define identity matricies
     eye(I_SS, n_x);
-    eye(Q, n_x);
     eye(H, n_x);
     eye(P_n_n, n_x);
     eye(R_n, n_z);
@@ -107,105 +111,184 @@ int main()
     B[16] = 0;
     B[17] = 1;
 
+    // Fill Out Q_a
+    Q_a[0] = pow(1,2);
+    Q_a[1] = 0;
+    Q_a[2] = 0;
+    Q_a[3] = 0;
+    Q_a[4] = pow(1,2);
+    Q_a[5] = 0;
+    Q_a[6] = 0;
+    Q_a[7] = 0;
+    Q_a[8] = pow(1,2);
+
+
     /*********************************************/
 	clock_t start, end;
 	float cpu_time_used;
 	start = clock();
     /*********************************************/ 
 
-    // Update the matrices for this time step
-    update_constant_matrices(n_x, n_u, F, FT, G, Gamma, B, n, 0, 0.01);
+    // Update the State Transition Matrix
+    compute_state_transition_matrix(F, n, t1, t2);
 
-    // printf("G: \n");
-    // print(F, n_x, n_x);
+    // Calculate the Tranpose of F
+    copy(F, FT, n_x*n_x);
+    tran(FT, n_x, n_x);
 
-    // printf("FT: \n");
-    // print(FT, n_x, n_x);
+    // Calculate the Tranpose of B
+    copy(B, BT, n_x*n_u);
+    tran(BT, n_u, n_x);
 
-    // printf("Gamma: \n");
-    // print(Gamma, n_x, n_x);
+    // Update the Gamma Matrix
+    compute_gamma_matrix(Gamma, n, t1, t2);
 
-    // printf("B: \n");
-    // print(B, n_x, n_u);
+    // Update the G Matrix
+    mul(Gamma, B, G, n_x, n_x, n_z);
 
-    // printf("G: \n");
-    // print(G, n_x, n_u);
+    // Update the process noise covariance matrix
+    compute_process_noise_covariance_matrix(n_x, n_u, Q, F, FT, B, BT, Q_a);
+
+    printf("\n\n----------------------------------------\n");
+    printf("CONSTANT MATRICIES\n");
+    printf("----------------------------------------\n");
+
+    printf("G: \n");
+    print(F, n_x, n_x);
+
+    printf("FT: \n");
+    print(FT, n_x, n_x);
+
+    printf("Gamma: \n");
+    print(Gamma, n_x, n_x);
+
+    printf("B: \n");
+    print(B, n_x, n_u);
+
+    printf("G: \n");
+    print(G, n_x, n_u);
+
+    printf("Q_a: \n");
+    print(Q_a, n_u, n_u);
+
+    printf("Q: \n");
+    print(Q, n_x, n_x);
 
     /*********************************************/
     /*****  X_n_p_1_n = F * X_n_n + G * U_n  *****/
     predict_state(n_x, x_n_p_1_n, F, x_n_n, G, u_n);
 
-    // printf("x_n_n: \n");
-    // print(x_n_n, n_x, 1);
+    printf("\n\n----------------------------------------\n");
+    printf("PREDICT STATE\n");
+    printf("----------------------------------------\n");
 
-    // printf("x_n_p_1_n: \n");
-    // print(x_n_p_1_n, n_x, 1);
+    printf("x_n_n: \n");
+    print(x_n_n, n_x, 1);
 
-    // printf("F: \n");
-    // print(F, n_x, n_x);
+    printf("x_n_p_1_n: \n");
+    print(x_n_p_1_n, n_x, 1);
 
-    // printf("G: \n");
-    // print(G, n_x, n_u);
+    printf("F: \n");
+    print(F, n_x, n_x);
 
-    // printf("u_n: \n");
-    // print(u_n, n_u, 1);
+    printf("G: \n");
+    print(G, n_x, n_u);
+
+    printf("u_n: \n");
+    print(u_n, n_u, 1);
 
     /*********************************************/
     /*****  P_n_p_1_n = F * P_n_n * F^T + Q  *****/
 
     predict_uncertainty(n_x, P_n_p_1_n, F, FT, P_n_n, Q);
 
-    // printf("P_n_n: \n");
-    // print(P_n_n, n_x, n_x);
+    printf("\n\n----------------------------------------\n");
+    printf("PREDICT UNCERTAINTY\n");
+    printf("----------------------------------------\n");
 
-    // printf("P_n_p_1_n: \n");
-    // print(P_n_p_1_n, n_x, n_x);
+    printf("P_n_n: \n");
+    print(P_n_n, n_x, n_x);
 
-    // printf("F: \n");
-    // print(F, n_x, n_x);
+    printf("P_n_p_1_n: \n");
+    print(P_n_p_1_n, n_x, n_x);
 
-    // printf("Q: \n");
-    // print(Q, n_x, n_x);
+    printf("F: \n");
+    print(F, n_x, n_x);
+
+    printf("Q: \n");
+    print(Q, n_x, n_x);
 
     /********************************************************************/
     /*****  K_n = P_n_n_m_1 * H^T * (H * P_n_n_m_1 * H^T + R_n)^-1  *****/
 
     compute_kalman_gain(n_x, n_z, K_n, P_n_p_1_n, H, R_n);
 
-    // printf("K_n: \n");
-    // print(K_n, n_x, n_z);
+    printf("\n\n----------------------------------------\n");
+    printf("COMPUTE KALMAN GAIN\n");
+    printf("----------------------------------------\n");
 
-    // printf("P_n_p_1_n: \n");
-    // print(P_n_n, n_x, n_x);
+    printf("K_n: \n");
+    print(K_n, n_x, n_z);
 
-    // printf("H: \n");
-    // print(H, n_z, n_x);
+    printf("P_n_p_1_n: \n");
+    print(P_n_n, n_x, n_x);
 
-    // printf("R_n: \n");
-    // print(R_n, n_x, n_x);
+    printf("H: \n");
+    print(H, n_z, n_x);
+
+    printf("R_n: \n");
+    print(R_n, n_x, n_x);
+
+    /*************************************************************/
+    /*****  X_n_n = x_n_p_1_n + K_n * (Z_n - H * x_n_p_1_n)  *****/
+
+    estimate_state(n_x, n_z, x_n_n, x_n_p_1_n, K_n, z_n, H);
+
+    printf("\n\n----------------------------------------\n");
+    printf("ESTIMATE STATE\n");
+    printf("----------------------------------------\n");
+
+    printf("x_n_n: \n");
+    print(x_n_n, n_x, 1);
+
+    printf("x_n_p_1_n: \n");
+    print(x_n_p_1_n, n_x, 1);
+
+    printf("K_n: \n");
+    print(K_n, n_x, n_z);
+
+    printf("z_n: \n");
+    print(z_n, n_z, 1);
+
+    printf("H: \n");
+    print(H, n_z, n_x);
     
     /*************************************************************************************/
     /*****  P_n_n = (I - K_n * H) * P_n_n_m_1 * (I - K_n * H)^T + K_n * R_n * K_n^T  *****/
 
     estimate_uncertainty(n_x, n_u, P_n_n, K_n, P_n_p_1_n, H, R_n, I_SS);
 
-    // printf("P_n_n: \n");
-    // print(P_n_n, n_x, n_x);
+    printf("\n\n----------------------------------------\n");
+    printf("ESTIMATE UNCERTAINTY\n");
+    printf("----------------------------------------\n");
 
-    // printf("K_n: \n");
-    // print(K_n, n_x, n_z);
+    printf("P_n_n: \n");
+    print(P_n_n, n_x, n_x);
 
-    // printf("P_n_p_1_n: \n");
-    // print(P_n_n, n_x, n_x);
+    printf("K_n: \n");
+    print(K_n, n_x, n_z);
 
-    // printf("H: \n");
-    // print(H, n_z, n_x);
+    printf("P_n_p_1_n: \n");
+    print(P_n_n, n_x, n_x);
 
-    // printf("R_n: \n");
-    // print(R_n, n_x, n_x);
+    printf("H: \n");
+    print(H, n_z, n_x);
 
-    // printf("I_SS: \n");
-    // print(I_SS, n_x, n_x);
+    printf("R_n: \n");
+    print(R_n, n_x, n_x);
+
+    printf("I_SS: \n");
+    print(I_SS, n_x, n_x);
 
     /*********************************************/
 	end = clock();
