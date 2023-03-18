@@ -17,8 +17,8 @@ tic;
 
 %% Timestep
 
-N = 30000;                  % Number of data points
-dt = 2;                     % Time step [s]
+N = 6794*2;                  % Number of data points
+dt = 1;                     % Time step [s]
 t1 = 0;                     % Start time [s]
 t2 = N*dt + t1;             % End time [s]
 t = linspace(t1, t2, N);    % N times from t1 to t1
@@ -30,7 +30,7 @@ rad_moon = 1737447.78;                  % Radius of the Moon [m]
 orbit_alt = 50000;                      % Chief altitude above the moon [m]
 orbit_rad = orbit_alt + rad_moon;       % Orbital radius of the chief [m]
 n_mm = sqrt(mu_moon/(orbit_rad^3));     % Mean motion of the Chief around the Moon [rad/s] 
-A0 = 0;                                 % Initial X offset of deputy from chief [m]
+A0 = 20;                                 % Initial X offset of deputy from chief [m]
 
 T = 2*pi/n_mm;                          % Chief Orbital Period [s]
 df = 360/T/dt;                          % True anomaly step [deg/step]
