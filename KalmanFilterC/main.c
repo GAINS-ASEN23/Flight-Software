@@ -14,7 +14,6 @@ Description : The main kalman filter file
 // GAINS includes
 #include "main.h"
 
-
 int main()
 {
     /*****  VARIABLE DECLARATION & PREALLOCATION  *****/
