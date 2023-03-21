@@ -31,36 +31,35 @@ int main()
     /*    Preallocate Matricies and Vectors    */
 
     // State and Uncertainty Matricies
-    float x_n_p_1_n[n_x];                   // Current Predicted State vector
-    float P_n_p_1_n[n_x*n_x];               // Current Predicted Uncertainty Matrix
+    float *x_n_p_1_n = (float*)malloc((n_x * 1) * sizeof(float));                   // Current Predicted State vector
+    float *P_n_p_1_n = (float*)malloc((n_x * n_x) * sizeof(float));                 // Current Predicted Uncertainty Matrix
 
-    float P_n_n[n_x*n_x];                   // Estimate Uncertainty Matrix
-    float x_n_n[n_x];                       // Estimate State vector
+    float *P_n_n = (float*)malloc((n_x * n_x) * sizeof(float));                     // Estimate Uncertainty Matrix
+    float *x_n_n = (float*)malloc((n_x * 1) * sizeof(float));                       // Estimate State vector
 
     // Input Variables
-    float z_n[n_x];                         // Measurement vector
-    float u_n[n_u];                         // Deterministic input vector
+    float *z_n = (float*)malloc((n_z * 1) * sizeof(float));                         // Measurement vector
+    float *u_n = (float*)malloc((n_u * 1) * sizeof(float));                         // Deterministic input vector
 
     // Kalman Filter Matricies
-    float F[n_x*n_x];                       // State Transition Matrix
-    float FT[n_x*n_x];                      // Transposed State Transition Matrix
+    float *F = (float*)malloc((n_x * n_x) * sizeof(float));                         // State Transition Matrix
+    float *FT = (float*)malloc((n_x * n_x) * sizeof(float));                        // Transposed State Transition Matrix
 
-    float G[n_x*n_u];                       // Control Matrix
-    float B[n_x*n_u];                       // Control Observation Matrix
-    float BT[n_u*n_x];                      // Transposed Control Observation Matrix
-    float Gamma[n_x*n_x];                   // Gamma Matrix (No other name??) 
+    float *G = (float*)malloc((n_x * n_u) * sizeof(float));                         // Control Matrix
+    float *B = (float*)malloc((n_x * n_u) * sizeof(float));                         // Control Observation Matrix
+    float *BT = (float*)malloc((n_u * n_x) * sizeof(float));                        // Transposed Control Observation Matrix
+    float *Gamma = (float*)malloc((n_x * n_x) * sizeof(float));                     // Gamma Matrix (No other name??) 
 
-    float H[n_z*n_x];                       // Observation Matrix
-    float HT[n_z*n_x];                      // Transposed Observation Matrix
+    float *H = (float*)malloc((n_z * n_x) * sizeof(float));                         // Observation Matrix
+    float *HT = (float*)malloc((n_z * n_x) * sizeof(float));                        // Transposed Observation Matrix
     eye(H, n_z);                            // Define the H matrix as the identity for this application
 
-    float Q[n_x*n_x];                       // Process Noise Matrix
-    float Q_a[n_u*n_u];                     // Input Noise Matrix
-    float R_n[n_z*n_z];                     // Measurement Noise Covariance Matrix
-    float K_n[n_x*n_z];                     // Kalman gain
+    float *Q = (float*)malloc((n_x * n_x) * sizeof(float));                         // Process Noise Matrix
+    float *Q_a = (float*)malloc((n_u * n_u) * sizeof(float));                       // Input Noise Matrix
+    float *R_n = (float*)malloc((n_z * n_z) * sizeof(float));                       // Measurement Noise Covariance Matrix
+    float *K_n = (float*)malloc((n_x * n_z) * sizeof(float));                       // Kalman gain
 
-
-    float I_SS[n_x*n_z];                    // Idenitity matrix (for K_n)
+    float *I_SS = (float*)malloc((n_x * n_z) * sizeof(float));                      // Idenitity matrix (for K_n)
     eye(I_SS, n_x);                         // Define the Identity Matrix
 
     /********************************************************/
@@ -228,9 +227,6 @@ int main()
     // printf("F: \n");
     // print(F, n_x, n_x);
 
-    // printf("Q: \n");
-    // print(Q, n_x, n_x);
-
     /********************************************************************/
     /*****  K_n = P_n_n_m_1 * H^T * (H * P_n_n_m_1 * H^T + R_n)^-1  *****/
 
@@ -255,14 +251,14 @@ int main()
     /*************************************************************/
     /*****  X_n_n = x_n_p_1_n + K_n * (Z_n - H * x_n_p_1_n)  *****/
 
-    // estimate_state(n_x, n_z, x_n_n, x_n_p_1_n, K_n, z_n, H);
+    estimate_state(n_x, n_z, x_n_n, x_n_p_1_n, K_n, z_n, H);
 
-    // printf("\n\n----------------------------------------\n");
-    // printf("ESTIMATE STATE\n");
-    // printf("----------------------------------------\n");
+    printf("\n\n----------------------------------------\n");
+    printf("ESTIMATE STATE\n");
+    printf("----------------------------------------\n");
 
-    // printf("x_n_n: \n");
-    // print(x_n_n, n_x, 1);
+    printf("x_n_n: \n");
+    print(x_n_n, n_x, 1);
 
     // printf("x_n_p_1_n: \n");
     // print(x_n_p_1_n, n_x, 1);
@@ -279,14 +275,14 @@ int main()
     /*************************************************************************************/
     /*****  P_n_n = (I - K_n * H) * P_n_n_m_1 * (I - K_n * H)^T + K_n * R_n * K_n^T  *****/
 
-    // estimate_uncertainty(n_x, n_u, P_n_n, K_n, P_n_p_1_n, H, R_n, I_SS);
+    estimate_uncertainty(n_x, n_u, P_n_n, K_n, P_n_p_1_n, H, R_n, I_SS);
 
-    // printf("\n\n----------------------------------------\n");
-    // printf("ESTIMATE UNCERTAINTY\n");
-    // printf("----------------------------------------\n");
+    printf("\n\n----------------------------------------\n");
+    printf("ESTIMATE UNCERTAINTY\n");
+    printf("----------------------------------------\n");
 
-    // printf("P_n_n: \n");
-    // print(P_n_n, n_x, n_x);
+    printf("P_n_n: \n");
+    print(P_n_n, n_x, n_x);
 
     // printf("K_n: \n");
     // print(K_n, n_x, n_z);
@@ -309,4 +305,27 @@ int main()
 	printf("\nTotal speed  was %0.18f\n", cpu_time_used);
     /*********************************************/
 
+
+    /*********************************************/
+    /*            CLEAN THE MEMORY UP            */
+    /*********************************************/
+
+    free(x_n_p_1_n);
+    free(P_n_p_1_n);
+    free(P_n_n);
+    free(x_n_n);
+    free(z_n);
+    free(u_n);
+    free(F);
+    free(FT);
+    free(G);
+    free(B);
+    free(BT);
+    free(Gamma);
+    free(H);
+    free(HT);
+    free(Q);
+    free(Q_a);
+    free(R_n);
+    free(K_n);
 }
