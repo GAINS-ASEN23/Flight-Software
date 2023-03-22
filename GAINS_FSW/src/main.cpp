@@ -16,7 +16,7 @@
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
-IPAddress ip(169,254,64,233);//ip(192, 168, 1, 177);
+IPAddress ip(169,254,59,40);//ip(192, 168, 1, 177);
 IPAddress subnet(255,255,0,0);
 
 
@@ -113,6 +113,8 @@ void loop()
     // send a reply to the IP address and port that sent us the packet we received
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(ReplyBuffer);
+	Serial.println("Sent Message:");
+	Serial.println(ReplyBuffer);
     Udp.endPacket();
   }
   delay(10);
