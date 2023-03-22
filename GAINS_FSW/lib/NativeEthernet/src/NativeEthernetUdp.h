@@ -33,6 +33,9 @@
  *
  * bjoern@cs.stanford.edu 12/30/2008
  */
+#ifndef _Native_Ethernet_UDP_H_
+#define _Native_Ethernet_UDP_H_
 
 #include "NativeEthernet.h"
 
+#endif
