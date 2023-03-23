@@ -16,7 +16,8 @@
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
-IPAddress ip(169,254,59,40);//ip(192, 168, 1, 177);
+IPAddress ip(169,254,64,233);//ip(192, 168, 1, 177);
+//IPAddress ip2(169,254,102,36);
 IPAddress subnet(255,255,0,0);
 
 
@@ -24,7 +25,7 @@ unsigned int localPort = 8888;      // local port to listen on
 
 // buffers for receiving and sending data
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];  // buffer to hold incoming packet,
-char ReplyBuffer[] = "acknowledged";        // a string to send back
+char ReplyBuffer[] = "acknowledged from Teensy";        // a string to send back
 
 // An EthernetUDP instance to let us send and receive packets over UDP
 EthernetUDP Udp;
@@ -80,7 +81,9 @@ void setup()
 void loop() 
 {
 	delay(1000);
-	Serial.println("Iteration..");
+	Serial.println("Iteration ... The Teensy's IP is: ");
+	Serial.println(Ethernet.localIP());
+	//Serial.println(Udp.localPort());
 	//delay(500);
 
 	// delay(10);
@@ -110,12 +113,16 @@ void loop()
     Serial.println("Contents:");
     Serial.println(packetBuffer);
 
+	
     // send a reply to the IP address and port that sent us the packet we received
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(ReplyBuffer);
 	Serial.println("Sent Message:");
 	Serial.println(ReplyBuffer);
-    Udp.endPacket();
+    int send_error = Udp.endPacket();
+	if (send_error == 0){
+		Serial.println("Error Sending Message");
+	}
   }
   delay(10);
 	
