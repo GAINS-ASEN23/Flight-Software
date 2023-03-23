@@ -13,12 +13,20 @@
 //#include <GAINSEthernet.h>
 #include <NativeEthernetUDP.h>
 
-byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+u_int8_t mac[] = {
+  //0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+  
+  // Teensy 3
+  // 04:e9:e5:14:31:44
+  // 10.0.0.103 on BG's home network
+  0x04, 0xE9, 0xE5, 0x14, 0x31, 0x44
+
 };
-IPAddress ip(169,254,64,233);//ip(192, 168, 1, 177);
-//IPAddress ip2(169,254,102,36);
-IPAddress subnet(255,255,0,0);
+
+
+
+IPAddress ip(10,0,0,103);
+IPAddress subnet(255,255,255,0);
 
 
 unsigned int localPort = 8888;      // local port to listen on
@@ -51,13 +59,20 @@ void setup()
 	*/
 
 // start the Ethernet
-  Ethernet.begin(mac, ip, subnet);
 
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+
+  // Find the teensy's actual mac address
+  for(uint8_t by=0; by<2; by++) mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
+  for(uint8_t by=0; by<4; by++) mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
+  Serial.printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  
+  // Start ethernet
+  Ethernet.begin(mac, ip, subnet);
 
   // Check for Ethernet hardware present
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
@@ -169,3 +184,4 @@ void loop()
 	//exit(0);
 	digitalWrite(LED_BUILTIN, LOW);
 }
+
