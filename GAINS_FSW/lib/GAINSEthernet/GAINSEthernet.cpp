@@ -9,10 +9,17 @@
 
 #include <GAINSEthernet.h>
 
+void teensyMAC(uint8_t *mac)
+{
+  for(uint8_t by=0; by<2; by++) mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
+  for(uint8_t by=0; by<4; by++) mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
+  Serial.printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
 int ETH_init()
 {
 // start the Ethernet
-  Ethernet.begin(mac1, ip1);
+  Ethernet.begin(mac, ip);
 
   // Open serial communications and wait for port to open:
   //Serial.begin(9600);
@@ -34,7 +41,7 @@ int ETH_init()
   }
 
   // start UDP
-  Udp1.begin(localPort1);
+  Udp.begin(localPort);
   return 0;
 
 }
@@ -42,12 +49,12 @@ int ETH_init()
 int UDP_receive()
 {
     // if there's data available, read a packet
-    int packetSize = Udp1.parsePacket();
+    int packetSize = Udp.parsePacket();
     if (packetSize != 0) {
-        remote1 = Udp1.remoteIP();
+        remote = Udp.remoteIP();
 
         // read the packet into packetBufffer
-        Udp1.read(packetBuffer1, UDP_TX_PACKET_MAX_SIZE);
+        Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
 
         /*
         Serial.print("Received packet of size ");
@@ -74,9 +81,9 @@ void UDP_send()
 {
 
         // send a reply to the IP address and port that sent us the packet we received
-        Udp1.beginPacket(Udp1.remoteIP(), Udp1.remotePort());
-        Udp1.write(ReplyBuffer1);
-        Udp1.endPacket();
+        Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+        Udp.write(replyBuffer);
+        Udp.endPacket();
 
 }
 
