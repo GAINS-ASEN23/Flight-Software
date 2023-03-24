@@ -47,7 +47,8 @@ int main()
     float *G = (float*)malloc((n_x * n_u) * sizeof(float));                         // Control Matrix
     float *B = (float*)malloc((n_x * n_u) * sizeof(float));                         // Control Observation Matrix
     float *BT = (float*)malloc((n_u * n_x) * sizeof(float));                        // Transposed Control Observation Matrix
-    float *Gamma = (float*)malloc((n_x * n_x) * sizeof(float));                     // Gamma Matrix (No other name??) 
+    float *Gamma = (float*)malloc((n_x * n_x) * sizeof(float));                     // Gamma Matrix (No other name??)
+    float *GammaT = (float*)malloc((n_x * n_x) * sizeof(float));                    // Gamma Matrix Transposed (No other name??)
 
     float *H = (float*)malloc((n_z * n_x) * sizeof(float));                         // Observation Matrix
     float *HT = (float*)malloc((n_z * n_x) * sizeof(float));                        // Transposed Observation Matrix
@@ -150,12 +151,14 @@ int main()
 
     // Update the Gamma Matrix
     compute_gamma_matrix(Gamma, n, t1, t2);
+    copy(Gamma, GammaT, n_x*n_x);
+    tran(GammaT, n_x, n_x);
 
     // Update the G Matrix
     mul(Gamma, B, G, n_x, n_x, n_z);
 
     // Update the process noise covariance matrix
-    compute_process_noise_covariance_matrix(n_x, n_u, Q, F, FT, B, BT, Q_a);
+    compute_process_noise_covariance_matrix(n_x, n_u, Q, B, BT, Gamma, GammaT, Q_a);
 
     // printf("\n\n----------------------------------------\n");
     // printf("CONSTANT MATRICIES\n");

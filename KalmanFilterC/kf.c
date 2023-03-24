@@ -324,20 +324,21 @@ void compute_gamma_matrix(float Gamma[], float n, float t1, float t2)
     Gamma[35] = (1/n)*sin(dt*n);
 }
 
-void compute_process_noise_covariance_matrix(uint8_t state_size, uint8_t input_num, float Q[], float F[], float FT[], float B[], float BT[], float Q_a[])
+void compute_process_noise_covariance_matrix(uint8_t state_size, uint8_t input_num, float Q[], float B[], float BT[], float Gamma[], float GammaT[], float Q_a[])
 {
-    /*            Equation             */
-    /*  Q = F * (B * Q_a * B^T) * F^T  */
+    /*                  Equation                */
+    /*  Q = Gamma * (B * Q_a * B^T) * Gamma^T   */
+    /*           Q = G * Q_a * G                */
 
     // Declare Temp Vars
     float BQ_a[state_size*input_num];
     float BQ_aBT[state_size*state_size];
-    float FBQ_aBT[state_size*state_size];
+    float GammaBQ_aBT[state_size*state_size];
 
     // Set the memory for the temp vars
     memset(BQ_a, 0, state_size*input_num*sizeof(float));
     memset(BQ_aBT, 0, state_size*state_size*sizeof(float));
-    memset(FBQ_aBT, 0, state_size*state_size*sizeof(float));
+    memset(GammaBQ_aBT, 0, state_size*state_size*sizeof(float));
 
     // BQ_a = B * Q_a
     mul(B, Q_a, BQ_a, state_size, input_num, input_num);
@@ -345,9 +346,9 @@ void compute_process_noise_covariance_matrix(uint8_t state_size, uint8_t input_n
     // BQ_aBT = BQ_a * B^T
     mul(BQ_a, BT, BQ_aBT, state_size, input_num, state_size);
 
-    // FBQ_aBT = F * BQ_aBT
-    mul(F, BQ_aBT, FBQ_aBT, state_size, state_size, state_size);
+    // GammaBQ_aBT = F * BQ_aBT
+    mul(Gamma, BQ_aBT, GammaBQ_aBT, state_size, state_size, state_size);
 
-    // Q = FBQ_aBT * FT
-    mul(FBQ_aBT, FT, Q, state_size, state_size, state_size);
+    // Q = GammaBQ_aBT * FT
+    mul(GammaBQ_aBT, Gamma, Q, state_size, state_size, state_size);
 }
