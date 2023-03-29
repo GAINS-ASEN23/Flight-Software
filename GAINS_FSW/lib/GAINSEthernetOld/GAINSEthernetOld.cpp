@@ -7,7 +7,7 @@
  * Ethernet Initializer
  */
 
-#include <GAINSEthernet.h>
+//#include <GAINSEthernet.h>
 
 void teensyMAC(uint8_t *mac)
 {
