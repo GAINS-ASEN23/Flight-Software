@@ -75,11 +75,13 @@ class GAINSEthernet{
         void send(char ReplyBuffer[]){
             Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
             Udp.write(ReplyBuffer);
-            Serial.printf("Sent Message: %s\n",ReplyBuffer);
 
             int send_error = Udp.endPacket();
-            if (send_error == 0){
+            if (send_error == 0) {
                 Serial.println("Error Sending Message");
+            }
+            else {
+                Serial.printf("Sent Message: %s\n",ReplyBuffer);
             }
         }
 
