@@ -51,11 +51,15 @@
 //#define ETHERNET_LARGE_BUFFERS
 
 
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <fnet.h>
 #include "Client.h"
 #include "Server.h"
 #include "Udp.h"
+
+//#ifdef __cplusplus // gains addition
+//extern "C" {
+//#endif
 
 enum EthernetLinkStatus {
 	Unknown,
@@ -398,6 +402,8 @@ private:
 
 extern EthernetMDNS MDNS;
 
-
+//#ifdef __cplusplus // gains addition
+//}
+//#endif
 
 #endif

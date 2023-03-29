@@ -19,8 +19,6 @@ void copy(float A[], float B[], uint16_t len);
 void add(float A[], float B[], float C[], uint16_t len);
 void sub(float A[], float B[], float C[], uint16_t len);
 void eye(float A[], uint16_t N);
-void SSP_decode();
-void UDP_send();
 
 #ifdef __cplusplus
 }
