@@ -1,15 +1,19 @@
 /*
- ============================================================================
- Name        : KF_accel.c
- Author      : Bennett Grow, Kaylie Rick, Jason Popich
- Version     : 0.1
- Copyright   : 
- Description : 
- ============================================================================
- */
+============================================================================
+Name        : KF_accel.c
+Author      : Bennett Grow, Kaylie Rick, Jason Popich
+Version     : 0.1
+Copyright   : 
+Description : 
+============================================================================
+*/
 
+// Library includes
 #include "CControl/Headers/Functions.h"
-#include "funcs.c"
+
+// GAINS includes
+#include "kf.h"
+#include "operations.h"
 
 int main()
 {
@@ -221,7 +225,7 @@ int main()
     // P_n_n = IK_nHP_n_n_m_1IK_nHT + K_nR_nK_nT
     add(IK_nHP_n_n_m_1IK_nHT, K_nR_nK_nT, P_n_n, StateSize*StateSize);
 
-    print(P_n_n, StateSize, StateSize);
+    // print(P_n_n, StateSize, StateSize);
 
     /*********************************************/
 	end = clock();

@@ -17,8 +17,8 @@ tic;
 
 %% Timestep
 
-N = 30000;                  % Number of data points
-dt = 2;                     % Time step [s]
+N = 6794*2;                 % Number of data points
+dt = 1;                     % Time step [s]
 t1 = 0;                     % Start time [s]
 t2 = N*dt + t1;             % End time [s]
 t = linspace(t1, t2, N);    % N times from t1 to t1
@@ -30,7 +30,7 @@ rad_moon = 1737447.78;                  % Radius of the Moon [m]
 orbit_alt = 50000;                      % Chief altitude above the moon [m]
 orbit_rad = orbit_alt + rad_moon;       % Orbital radius of the chief [m]
 n_mm = sqrt(mu_moon/(orbit_rad^3));     % Mean motion of the Chief around the Moon [rad/s] 
-A0 = 0;                                 % Initial X offset of deputy from chief [m]
+A0 = 0;                                % Initial X offset of deputy from chief [m]
 
 T = 2*pi/n_mm;                          % Chief Orbital Period [s]
 df = 360/T/dt;                          % True anomaly step [deg/step]
@@ -52,7 +52,8 @@ p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
 
-[~,thrust_accel] = sample_thrust(dt);
+[thrust_accel,~] = sample_thrust(dt);
+thrust_accel = thrust_accel.*20;
 sigma_thrust = 1;
 fprintf("\nVelocity impluse: %0.3f \n", dt*sum(thrust_accel))
 
@@ -75,13 +76,23 @@ j = 1;
 accel_flag = false;
 
 % Accelerator Process Noise Std. Dev.
-sigma_a = ones(3,1) .* 0.1;
+Qa = eye(3,3) .* 0.1;
 
 % Process Noise Covariance Matrix
-Q_func = @(dt,n,sigma_ax,sigma_ay,sigma_az)reshape([1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).^2+1.0./n.^2.*sigma_ay.^2.*(cos(dt.*n)-1.0).^2.*4.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,0.0,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,0.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,1.0./n.^2.*sigma_ax.^2.*(cos(dt.*n)-1.0).^2.*4.0+1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).^2,0.0,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,0.0,0.0,1.0./n.^2.*sigma_az.^2.*sin(dt.*n).^2,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,0.0,sigma_ax.^2.*cos(dt.*n).^2+sigma_ay.^2.*sin(dt.*n).^2.*4.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,0.0,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,sigma_ax.^2.*sin(dt.*n).^2.*4.0+sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).^2,0.0,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,0.0,0.0,sigma_az.^2.*cos(dt.*n).^2],[6,6]);
-Q = Q_func(dt,n_mm,sigma_a(1),sigma_a(2),sigma_a(3));
+% Q_func = @(dt,n,sigma_ax,sigma_ay,sigma_az)reshape([1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).^2+1.0./n.^2.*sigma_ay.^2.*(cos(dt.*n)-1.0).^2.*4.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,0.0,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,0.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,1.0./n.^2.*sigma_ax.^2.*(cos(dt.*n)-1.0).^2.*4.0+1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).^2,0.0,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,0.0,0.0,1.0./n.^2.*sigma_az.^2.*sin(dt.*n).^2,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,0.0,sigma_ax.^2.*cos(dt.*n).^2+sigma_ay.^2.*sin(dt.*n).^2.*4.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,0.0,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,sigma_ax.^2.*sin(dt.*n).^2.*4.0+sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).^2,0.0,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,0.0,0.0,sigma_az.^2.*cos(dt.*n).^2],[6,6]);
+% Q = Q_func(dt,n_mm,sigma_a(1),sigma_a(2),sigma_a(3));
+
+
 
 for i = 1:N
+
+    % Control Input
+    U_n = zeros(3,1);
+    
+    % Unit vector pointing to deputy
+    current_R = norm(chief_state(i,1:3));
+    unit_pos = chief_state(i,1:3)./current_R;
+
     % Start thrusting about halfway through the orbit (N/2)
     if (i > N/2) && (j < length(thrust_accel))
 
@@ -103,16 +114,22 @@ for i = 1:N
         %R_n = p_n_n + [zeros(3) zeros(3); zeros(3) eye(3)*sigma_thrust];
         
         % Control Input
-        U_n = [a_x; a_y; a_z];
+        U_n(1) = U_n(1) + a_x;
+        U_n(2) = U_n(2) + a_y;
+        U_n(3) = U_n(3) + a_z;
         
         % Increment the j index to get the next acceleration
         j = j + 1;
 
-    else
-
-        % Control Input
-        U_n = zeros(3,1);
     end
+
+    %{
+    % Orbit degredation due to gravitational acceleration
+    G_degrade = mu_moon/current_R^2;
+    U_n(1) = U_n(1) - G_degrade*unit_pos(1);
+    U_n(2) = U_n(2) - G_degrade*unit_pos(2);
+    U_n(3) = U_n(3) - G_degrade*unit_pos(3);
+    %}
     
     % Set the current measurement vector
     M_n = zeros(6,1);
@@ -128,7 +145,7 @@ for i = 1:N
     t2 = t(i);
 
     % Run the KF equations for current step
-    [x_n_n, p_n_n] = KF_cw(n_mm, Q, M_n, U_n, x_n_n, p_n_n, R_n, dt, t1, t2, false);
+    [x_n_n, p_n_n] = KF_cw(n_mm, Qa, M_n, U_n, x_n_n, p_n_n, R_n, dt, t1, t2, false);
     
     % Save State and Error
     state = [state; x_n_n'];

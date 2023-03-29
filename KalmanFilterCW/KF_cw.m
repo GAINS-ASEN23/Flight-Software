@@ -1,4 +1,4 @@
-function [state, error] = KF_cw(n, Q, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn, ground_data)
+function [state, error] = KF_cw(n, Qa, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn, ground_data)
 %{
     Last Edited: Bennett Grow 3/17/23
 
@@ -45,6 +45,8 @@ function [state, error] = KF_cw(n, Q, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn,
     G_func = @(dt,n,t1,t2)reshape([1.0./n.^2.*sin((dt.*n)./2.0).^2.*2.0,1.0./n.^2.*(sin(dt.*n).*2.0-dt.*n.*2.0),0.0,sin(dt.*n)./n,(sin((dt.*n)./2.0).^2.*-4.0)./n,0.0,-1.0./n.^2.*(sin(dt.*n).*2.0-dt.*n.*2.0),1.0./n.^2.*sin((dt.*n)./2.0).^2.*8.0+t1.*t2.*3.0-t1.^2.*(3.0./2.0)-t2.^2.*(3.0./2.0),0.0,(sin((dt.*n)./2.0).^2.*4.0)./n,dt.*-3.0+(sin(dt.*n).*4.0)./n,0.0,0.0,0.0,1.0./n.^2.*sin((dt.*n)./2.0).^2.*2.0,0.0,0.0,sin(dt.*n)./n],[6,3]);
     G = G_func(dt,n,tnm1,tn);
 
+    
+
     % Define the observation matrix
     if (ground_data == true)
         H = eye(6);
@@ -52,15 +54,18 @@ function [state, error] = KF_cw(n, Q, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn,
         H = zeros(6);
     end
     
+    % Process noise covariance matrix
+    if(U_n == zeros(3,1))
+        Q = zeros(6);
+
+    else % Thrusting
+        Q = G*Qa*G';
+    end
+
     % Set errors
     pos_sigma = 1000;              % Position error in [km]
     vel_sigma = 1;               % Velocity error in [km/s]
     
-    % Define the Measurement Process Noise Matrix, Q_meas
-    % Q_meas = [eye(3)*pos_sigma zeros(3); zeros(3) eye(3)*vel_sigma];
-
-    % Define the Process Noise Matrix, Q
-    % Q = F*Q_meas*F';
 
     
     %% ---------------------------------------
