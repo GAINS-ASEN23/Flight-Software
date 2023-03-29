@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "functions.h": "c",
+        "kf.h": "c",
+        "random": "c",
+        "*.tcc": "c",
+        "complex": "cpp",
+        "cmath": "cpp",
+        "stdlib.h": "c",
+        "numbers": "c"
+    }
+}
