@@ -1,10 +1,10 @@
 /*
  ============================================================================
- Name        : main.c
+ Name        : main.cpp
  Author      : Bennett Grow, Kaylie Rick, Jason Popich
- Version     : 0.1
+ Version     : 0.2
  Copyright   : 
- Description : 
+ Description : Main script to run all GAINS Flight Software
  ============================================================================
  */
 
@@ -34,28 +34,27 @@ void loop() {
 	Serial.printf("Ann and H.J. Smead Dept. of Aerospace Engineering\n");
 	Serial.printf("Senior Design Project - Spring 2023\n");
 
-
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	// Configure connection settings
 	int local[] = {21,0,0,103};
+	int localport = 8888;
 	int remote[] = {21,0,0,3};
+	int remoteport = 8889;
 	int subnet[] = {255,255,255,0};
-	int port = 8888;
 
-	// Initialize GAINSEthernet object
-	GAINSEthernet GE(local, remote, subnet, port);
+	// Initialize GAINSEthernet object and print connection information
+	GAINSEthernet GE(local, remote, subnet, localport, remoteport);
 	GE.info();
 	Serial.printf("========================================================================\n");
 
-
+	// Recieve and send a message over UDP
 	char message[] = {"Teensy send test"};
-	//uint16_t send_port = 8889;
-
 	while (true) {
 		GE.read();
 		delay(500);
-		GE.send(message, IPAddress(21,0,0,3), 8889);
+		GE.send(message, *GE.remoteIP, GE.remotePort);
+		// GE.send(message, IPAddress(21,0,0,3), 8889);  // Alternative usage
 	}
 
 	

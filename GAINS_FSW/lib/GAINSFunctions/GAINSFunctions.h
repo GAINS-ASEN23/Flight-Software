@@ -1,8 +1,11 @@
 /*
- * GAINSFunctions.h
- *
- * Created on: 7 Feb. 2023
- * Author: Bennett Grow
+ ============================================================================
+ Name        : GAINSFunctions.h
+ Author      : Bennett Grow
+ Version     : 0.1
+ Copyright   : 
+ Description : Various functions useful for matrix math and other GAINS functions
+ ============================================================================
  */
 
 #ifndef _GAINSFunctions_H_
@@ -15,6 +18,7 @@
 extern "C" {
 #endif
 
+// Matrix math
 void copy(float A[], float B[], uint16_t len);
 void add(float A[], float B[], float C[], uint16_t len);
 void sub(float A[], float B[], float C[], uint16_t len);
