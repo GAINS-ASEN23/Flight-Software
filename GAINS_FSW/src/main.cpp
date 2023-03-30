@@ -33,6 +33,7 @@ void loop() {
 	Serial.printf("University of Colorado Boulder\n");
 	Serial.printf("Ann and H.J. Smead Dept. of Aerospace Engineering\n");
 	Serial.printf("Senior Design Project - Spring 2023\n");
+	Serial.printf("https://github.com/GAINS-ASEN23\n");
 
 	digitalWrite(LED_BUILTIN, HIGH);
 
@@ -53,50 +54,19 @@ void loop() {
 	while (true) {
 		GE.read();
 		delay(500);
-		GE.send(message, *GE.remoteIP, GE.remotePort);
+		GE.send(message, GE.getRemoteIP(), GE.getRemotePort());
 		// GE.send(message, IPAddress(21,0,0,3), 8889);  // Alternative usage
 	}
 
-	
-	/*
-		for (size_t i = 0; i < 1000; i++)
-		{
-			
-			digitalWrite(LED_BUILTIN, HIGH); 
 
-			unsigned long start = micros();
-			unsigned long now;
-			unsigned long duration;
-			int counter = 0;
+	// At each timestep 
+	// 		Read in sensor data
+	// 		Read any packets/GS updates
+	//		Coordinate frame trans/etc.
+	// 		run 1 step of KF
+	//		send state to ground or write to memory if LOC
 
-			while (true)
-			{
 
-				KF();
-
-				now = micros();
-				duration = now - start; 
-
-				counter += 1;
-
-				if (duration >= 1000000)
-				{
-					break;
-				}
-
-			}
-
-			Serial.print("KF cycles in ");
-			Serial.print(duration/pow(10,3));
-			Serial.print(" milliseconds:  ");
-			Serial.println(counter);
-
-			digitalWrite(LED_BUILTIN, LOW);
-
-			delay(1000);
-
-		}
-		*/
 
 	digitalWrite(LED_BUILTIN, LOW);
 	exit(0);
