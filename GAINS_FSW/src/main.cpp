@@ -28,30 +28,34 @@ void setup() {
 
 void loop() {
 
+	Serial.printf("===============================  GAINS  ================================\n");
+	Serial.printf("General Atomics Inertial Navigation System\n");
+	Serial.printf("University of Colorado Boulder\n");
+	Serial.printf("Ann and H.J. Smead Dept. of Aerospace Engineering\n");
+	Serial.printf("Senior Design Project - Spring 2023\n");
+
+
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	// Configure connection settings
 	int local[] = {21,0,0,103};
-	int remote[] = {21,0,0,2};
+	int remote[] = {21,0,0,3};
 	int subnet[] = {255,255,255,0};
 	int port = 8888;
 
 	// Initialize GAINSEthernet object
 	GAINSEthernet GE(local, remote, subnet, port);
-
-	// Print connection settings to serial
-	Serial.printf("=======================  Ethernet Configuration  =======================\n");
-	GE.printMAC();
-	Serial.printf("Local IP: %d:%d:%d:%d\n", local[0], local[1], local[2], local[3]);
-	Serial.printf("Remote IP: %d:%d:%d:%d\n", remote[0], remote[1], remote[2], remote[3]);
-	Serial.printf("Subnet Mask: %d:%d:%d:%d\n", subnet[0], subnet[1], subnet[2], subnet[3]);
-	Serial.printf("Port: %d\n", port);
+	GE.info();
 	Serial.printf("========================================================================\n");
 
 
+	char message[] = {"Teensy send test"};
+	//uint16_t send_port = 8889;
+
 	while (true) {
 		GE.read();
-		delay(10);
+		delay(500);
+		GE.send(message, IPAddress(21,0,0,3), 8889);
 	}
 
 	
