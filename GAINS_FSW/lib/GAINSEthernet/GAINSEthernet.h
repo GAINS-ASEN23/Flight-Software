@@ -29,8 +29,21 @@ class GAINSEthernet{
         }
 
         // Print the MAC address to serial
-        void printMAC(){
+        void info(){
+            // Yes I know this is ugly...
+            IPAddress local = *localIP;
+            IPAddress remote = *remoteIP;
+            IPAddress subnet = *subnetIP;
+
+            Serial.printf("=======================  Ethernet Configuration  =======================\n");
             Serial.printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            Serial.printf("Local IP: %d:%d:%d:%d\n", local[0], local[1], local[2], local[3]);
+            Serial.printf("Remote IP: %d:%d:%d:%d\n", remote[0], remote[1], remote[2], remote[3]);
+            Serial.printf("Subnet Mask: %d:%d:%d:%d\n", subnet[0], subnet[1], subnet[2], subnet[3]);
+            Serial.printf("Recieving Port: %d\n", localPort);
+            // Serial.printf("========================================================================\n");
+        
+        
         }
 
         // Assign the MAC address of this specific Teensy
@@ -67,24 +80,28 @@ class GAINSEthernet{
                 Serial.printf("Packet from %d.%d.%d.%d:%d of size %d:  ", remote[0], remote[1], remote[2], remote[3], remotePort, packetSize);
                 Serial.println(packetBuffer);
 
-                char replyMessage[] = "Message acknowledged from Teensy";
-                send(replyMessage);
+                //char replyMessage[] = "Message acknowledged from Teensy";
+                //send(replyMessage);
             }
         }
 
-        void send(char ReplyBuffer[]){
-            Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-            Udp.write(ReplyBuffer);
+        void send(char replyBuffer[], IPAddress IP, uint16_t PORT){
+            Udp.beginPacket(IP, PORT);
+            Udp.write(replyBuffer);
 
             int send_error = Udp.endPacket();
             if (send_error == 0) {
                 Serial.println("Error Sending Message");
             }
             else {
-                Serial.printf("Sent Message: %s\n",ReplyBuffer);
+                Serial.printf("Packet to %d.%d.%d.%d:%d  >>  %s\n", IP[0],IP[1],IP[2],IP[3],PORT,replyBuffer);
             }
         }
 
+
+        void send_return(char replyBuffer[]){
+            send(replyBuffer, Udp.remoteIP(), Udp.remotePort());
+        }
 
 };
 
