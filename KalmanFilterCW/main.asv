@@ -92,9 +92,9 @@ for i = 1:N
     U_n_G = zeros(3,1);
     U_n_F = zeros(3,1);
     
-%     % Unit vector pointing to deputy
-%     current_R = norm(chief_state(i,1:3));
-%     unit_pos = chief_state(i,1:3)./current_R;
+    % Unit vector pointing to deputy
+    current_R = norm(chief_state(i,1:3));
+    unit_pos = chief_state(i,1:3)./current_R;
 
     % Start thrusting one quater of the way through the orbit (N/4)
     if (i > N/4) && (j < length(thrust_accel_ideal))
@@ -128,7 +128,18 @@ for i = 1:N
 
     end
     
-    % Handle time edge case
+    % Regain contact three quaters of the way through the orbit (N*3/4)
+    if (i > N*3/4) 
+
+    else
+        M_n_F = zeros(6,1);
+
+    end
+
+    
+    % Get the current Measurement Error
+    R_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+    
     if i == 1
         t1 = 0;
     else
@@ -136,22 +147,9 @@ for i = 1:N
     end
     t2 = t(i);
 
-
-    % Regain contact three quaters of the way through the orbit (N*3/4)
-    if (i > N*3/4) 
-        M_n_F = x_n_n_G;
-        R_n_F = [eye(3)*0.0001 zeros(3); zeros(3) eye(3)*0.0001];
-        [x_n_n_F, p_n_n_F] = KF_cw(n_mm, Qa_F, M_n_F, U_n_F, x_n_n_F, p_n_n_F, R_n_F, dt, t1, t2, true);
-
-    else
-        M_n_F = zeros(6,1);
-        R_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
-        [x_n_n_F, p_n_n_F] = KF_cw(n_mm, Qa_F, M_n_F, U_n_F, x_n_n_F, p_n_n_F, R_n_F, dt, t1, t2, false);
-
-    end
-
-
+    % Run the KF equations for current step
     x_n_n_G = ground_cw(n_mm, U_n_G, x_n_n_G, dt, t1, t2);
+    [x_n_n_F, p_n_n_F] = KF_cw(n_mm, Qa_F, M_n_F, U_n_F, x_n_n_F, p_n_n_F, R_n_F, dt, t1, t2, false);
     
     % Save State and Error
     stateG = [stateG; x_n_n_G'];
