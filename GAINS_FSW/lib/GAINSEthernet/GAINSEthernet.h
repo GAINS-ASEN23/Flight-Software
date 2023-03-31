@@ -74,16 +74,6 @@ class GAINSEthernet{
             Serial.printf("Local: %d.%d.%d.%d:%d\n", (*GAINSEthernet::localIP)[0], (*GAINSEthernet::localIP)[1], (*GAINSEthernet::localIP)[2], (*GAINSEthernet::localIP)[3], GAINSEthernet::localPort);
             Serial.printf("Remote: %d.%d.%d.%d:%d\n", (*GAINSEthernet::remoteIP)[0], (*GAINSEthernet::remoteIP)[1], (*GAINSEthernet::remoteIP)[2], (*GAINSEthernet::remoteIP)[3], GAINSEthernet::remotePort);
             Serial.printf("Subnet Mask: %d.%d.%d.%d\n", (*GAINSEthernet::subnetIP)[0], (*GAINSEthernet::subnetIP)[1], (*GAINSEthernet::subnetIP)[2], (*GAINSEthernet::subnetIP)[3]);
-
-            // IPAddress local = *localIP;
-            // IPAddress remote = *remoteIP;
-            // IPAddress subnet = *subnetIP;
-            // Serial.printf("=======================  Ethernet Configuration  =======================\n");
-            // Serial.printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            // Serial.printf("Local: %d.%d.%d.%d:%d\n", local[0], local[1], local[2], local[3], localPort);
-            // Serial.printf("Remote: %d.%d.%d.%d:%d\n", remote[0], remote[1], remote[2], remote[3], remotePort);
-            // Serial.printf("Subnet Mask: %d.%d.%d.%d\n", subnet[0], subnet[1], subnet[2], subnet[3]);
-            // Serial.printf("========================================================================\n");
         }
 
         // Read a packet from UDP

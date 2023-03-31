@@ -52,8 +52,9 @@ void loop() {
 	// Recieve and send a message over UDP
 	char message[] = {"Teensy send test"};
 	while (true) {
+		Serial.printf("Loop Start");
+		delay(5000);
 		GE.read();
-		delay(500);
 		GE.send(message, GE.getRemoteIP(), GE.getRemotePort());
 		// GE.send(message, IPAddress(21,0,0,3), 8889);  // Alternative usage
 	}

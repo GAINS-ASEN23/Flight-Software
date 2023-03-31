@@ -93,7 +93,8 @@ function [state, error] = KF_cw(n, Qa, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn
     x_n_n = x_n_n + K_n*(z_n - H*x_n_n);
 
     % Extrapolate the state
-    x_n_n = F*x_n_n + G*U_n;
+    x_n_p_1_n = F*x_n_n + G*U_n;
+
 
     % Get the size of H
     [H_rows, H_cols] = size(K_n*H);
