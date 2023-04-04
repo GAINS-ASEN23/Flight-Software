@@ -82,27 +82,6 @@ int main()
     float sigma_r_n[6] = {sigma_position_ground, sigma_position_ground, sigma_position_ground, sigma_velocity_ground, sigma_velocity_ground, sigma_velocity_ground};
     KF.set_r_n(sigma_r_n);
 
-    /*  Set the initial measurement vector as zero */
-    z_n[0] = 0;
-    z_n[1] = 0;
-    z_n[2] = 0;
-    z_n[3] = 0;
-    z_n[4] = 0;
-    z_n[5] = 0;
-    KF.set_mea_input_vector(z_n);
-        
-    /*  Set the initial input vector as zero */
-    u_n[0] = 0;
-    u_n[1] = 0;
-    u_n[2] = 0;
-    u_n[3] = 0;
-    u_n[4] = 0;
-    u_n[5] = 0;
-    KF.set_det_input_vector(u_n);
-
-    /*  Set the H matrix as if we don't have a ground contact */
-    KF.set_h(false);
-
     /*  Set the initial input covariance */
     float sigma_accel_x = 1;
     float sigma_accel_y = 1;
@@ -118,8 +97,38 @@ int main()
 	start = clock();
     /*********************************************/ 
 
-    KF.KF_run(t1, t2, n);
-    print(x_n_n, 6, 1);
+    // LOOP
+    // while(true)
+    // {
+            // Set the measurement vector, if ground contact is non-zero
+            z_n[0] = 0;
+            z_n[1] = 0;
+            z_n[2] = 0;
+            z_n[3] = 0;
+            z_n[4] = 0;
+            z_n[5] = 0;
+            KF.set_mea_input_vector(z_n);
+
+            // Set the H matrix as if we don't have a ground contact, but if contact set true
+            KF.set_h(false);
+
+            // Set the deterministic input vector, if thrusting is non-zero
+            u_n[0] = 0;
+            u_n[1] = 0;
+            u_n[2] = 0;
+            u_n[3] = 0;
+            u_n[4] = 0;
+            u_n[5] = 0;
+            KF.set_det_input_vector(u_n);
+
+            // Run the KF
+            KF.KF_run(t1, t2, n);
+            print(x_n_n, 6, 1);
+
+            // Delay depending on requirements
+            
+            // Update t1 and t2
+    // }
 
     /*********************************************/
 	end = clock();
