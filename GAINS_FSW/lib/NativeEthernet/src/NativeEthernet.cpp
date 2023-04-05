@@ -251,18 +251,18 @@ void EthernetClass::begin(uint8_t *mac, IPAddress ip, IPAddress dns, IPAddress g
         init_params.timer_api = &timer_api;
         /* FNET Initialization */
         if (fnet_init(&init_params) != FNET_ERR) {
-//          Serial.println("TCP/IP stack initialization is done.\n");
+        //  Serial.println("TCP/IP stack initialization is done.\n");
           /* You may use FNET stack API */
           /* Initialize networking interfaces using fnet_netif_init(). */
     //        Get current net interface.
           if(fnet_netif_init(FNET_CPU_ETH0_IF, mac, 6) != FNET_ERR){
-//            Serial.println("netif Initialized");
+           Serial.println("netif Initialized");
             if(fnet_netif_get_default() == 0){
-//              Serial.println("ERROR: Network Interface is not configurated!");
+            //  Serial.println("ERROR: Network Interface is not configurated!");
               return;
             }
             else {
-//              Serial.println("SUCCESS: Network Interface is configurated!");
+            //  Serial.println("SUCCESS: Network Interface is configurated!");
               fnet_link_params_t link_params;
               link_params.netif_desc = fnet_netif_get_default();
               link_params.callback = link_callback;
@@ -271,17 +271,17 @@ void EthernetClass::begin(uint8_t *mac, IPAddress ip, IPAddress dns, IPAddress g
             }
           }
           else {
-//            Serial.println("Error:netif initialization failed.\n");
+        //    Serial.println("Error:netif initialization failed.\n");
             return;
           }
         }
         else {
-//          Serial.println("Error:TCP/IP stack initialization failed.\n");
+        //  Serial.println("Error:TCP/IP stack initialization failed.\n");
           return;
         }
     }
     else{
-//        Serial.println("Error:TCP/IP stack already initialized.");
+    //    Serial.println("Error:TCP/IP stack already initialized.");
 //        return;
     }
     
