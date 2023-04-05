@@ -54,7 +54,6 @@ void loop() {
 	GE.send((char*)"GAINS FSW Initialized", GE.getRemoteIP(), GE.getRemotePort());
 	//char message[] = {"Teensy send test"};
 	// GE.send(message, IPAddress(21,0,0,3), 8889);  // Alternative usage
-	GE.read();
 
 
 	// At each timestep 
@@ -142,13 +141,16 @@ void loop() {
 	// clock_t start, end;
 	// float cpu_time_used;
 	// start = clock();
-	uint32_t start, end, time_millisec;
-	start = micros();
+	// uint32_t start, end, time_elap;
+	// start = micros();
     /*********************************************/ 
 
     // LOOP
-    // while(true)
-    // {
+	int KFcounter = 0;
+    while(true)
+    {
+			GE.read();
+
             // Set the measurement vector, if ground contact is non-zero
             z_n[0] = 0;
             z_n[1] = 0;
@@ -177,16 +179,26 @@ void loop() {
             // Delay depending on requirements
             
             // Update t1 and t2
-    // }
 
 
-	/*********************************************/
-	//end = clock();
-	//cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
-	end = micros();
-	time_millisec = ((float)(end-start))/100;
-	Serial.printf("\nTotal speed  was %0.18f\n", time_millisec);
-    /*********************************************/
+			// if (KFcounter == 1000){
+			// /*********************************************/
+			// 	//end = clock();
+			// 	//cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
+			// 	end = micros();
+			// 	time_elap = end-start;
+			// 	Serial.printf("Execution time of 1000 KF:  %u us\n", time_elap);
+			// 	KFcounter = 0;
+			// 	start = end;
+			// /*********************************************/
+			// }
+
+			// KFcounter++;
+
+    }
+
+
+
 
 
 	digitalWrite(LED_BUILTIN, LOW);
