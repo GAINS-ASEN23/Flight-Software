@@ -11,11 +11,16 @@
 #include <Arduino.h>
 #include <GAINSEthernet.h>
 #include <kf.h>
-#include <SaveSD.h>
+#include <SD.h>
+
+#define ADC_RES 21 		// ADC resolution (bits)
+#define AP 24 			// Positive accelerometer differential pin
+#define AN	25 			// Negative accelerometer differential pin
+#define VT 20 			// Temperature pin from accelerometer
 
 void setup() {
 
-	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(LED_BUILTIN, OUTPUT); // Teensy LED
 
 	// Open serial communications and wait for port to open:
 	Serial.begin(115200);
@@ -23,9 +28,11 @@ void setup() {
 		;
 	}
 
-	delay(500);
+	// Set the resolution of the built-in ADC
+	analogReadResolution(ADC_RES);
 
 }
+
 
 void loop() {
 
@@ -39,9 +46,9 @@ void loop() {
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	// Configure connection settings
-	int local[] = {21,0,0,103};
+	int local[] = {21,0,0,104};
 	int localport = 8888;
-	int remote[] = {21,0,0,2};
+	int remote[] = {21,0,0,3};
 	int remoteport = 8889;
 	int subnet[] = {255,255,255,0};
 
@@ -52,24 +59,18 @@ void loop() {
 
 	// Send and recieve a message over UDP
 	GE.send((char*)"GAINS FSW Initialized", GE.getRemoteIP(), GE.getRemotePort());
-	//char message[] = {"Teensy send test"};
-	// GE.send(message, IPAddress(21,0,0,3), 8889);  // Alternative usage
-
-
-	// At each timestep 
-	// 		Read in sensor data
-	// 		Read any packets/GS updates
-	//		Coordinate frame trans/etc.
-	// 		run 1 step of KF
-	//		send state to ground or write to memory if LOC
 
 
 	/*****  VARIABLE DECLARATION & PREALLOCATION  *****/
 
     /*    Set System Variables    */
 
-    float t1 = 0;                           // Sample Time begin
-    float t2 = 0.01;                        // Sample Time end
+	bool contact = false;
+	bool thrusting = false;
+
+	float t0 = micros()/100000.0;			 // initial time
+    float t1 = t0;                           // Sample Time begin
+    float t2 = t1 + 0.01;                    // Sample Time end
 
     uint16_t n_u = 3;                       // Number of deterministic inputs (3 - accelerations x,y,z)
     uint16_t n_x = 6;                       // Number of States (x, y, z, x_dot, y_dot, z_dot)
@@ -81,8 +82,8 @@ void loop() {
     float *x_n_n = (float*)malloc((n_x * 1) * sizeof(float));                       // Estimate State vector
 
     // Input Variables
-    float* z_n = (float*)malloc((n_z * 1) * sizeof(float));                                // Measurement vector
-    float* u_n = (float*)malloc((n_u * 1) * sizeof(float));                                // Deterministic input vector
+    float* z_n = (float*)malloc((n_z * 1) * sizeof(float));                         // Measurement vector
+    float* u_n = (float*)malloc((n_u * 1) * sizeof(float));                         // Deterministic input vector
 
     /********************************************************/
     /*       FILL IN THE INITIAL VECTORS AND MATRICIES      */
@@ -92,7 +93,7 @@ void loop() {
 
     float mu_moon = 4.9048695e12;           // Gravitational parameter of the Moon [m^3 s^-2]
     float rad_moon = 1737447.78;            // Radius of the Moon [m]
-    float orbit_alt = 50000;                // Orbit radius [m]
+    float orbit_alt = 50000.0;              // Orbit radius [m]
 
     // Set the mean motion for CW equations
     float n = calculate_mean_motion(mu_moon, rad_moon, orbit_alt);
@@ -137,69 +138,50 @@ void loop() {
     float sigma_q_a[3] = {sigma_accel_x, sigma_accel_y, sigma_accel_z};
     KF.set_q_a(sigma_q_a);
 
-    /*********************************************/
-	// clock_t start, end;
-	// float cpu_time_used;
-	// start = clock();
-	// uint32_t start, end, time_elap;
-	// start = micros();
-    /*********************************************/ 
-
     // LOOP
-	int KFcounter = 0;
-    while(true)
+    while (true)
     {
+			// Read any packets from GSW
 			GE.read();
 
+			// Read accelerometer data
+			int AO_P = analogRead(AP);
+			int AO_N = analogRead(AN);
+			int V_T = analogRead(VT);
+
+
             // Set the measurement vector, if ground contact is non-zero
-            z_n[0] = 0;
-            z_n[1] = 0;
-            z_n[2] = 0;
-            z_n[3] = 0;
-            z_n[4] = 0;
-            z_n[5] = 0;
-            KF.set_mea_input_vector(z_n);
+			if (contact){
+				z_n[0] = 0;
+				z_n[1] = 0;
+				z_n[2] = 0;
+				z_n[3] = 0;
+				z_n[4] = 0;
+				z_n[5] = 0;
+				KF.set_mea_input_vector(z_n);
+			}
 
             // Set the H matrix as if we don't have a ground contact, but if contact set true
-            KF.set_h(false);
+            KF.set_h(contact);
 
             // Set the deterministic input vector, if thrusting is non-zero
-            u_n[0] = 0;
-            u_n[1] = 0;
-            u_n[2] = 0;
-            u_n[3] = 0;
-            u_n[4] = 0;
-            u_n[5] = 0;
-            KF.set_det_input_vector(u_n);
+			if (thrusting){
+				u_n[0] = 0;
+				u_n[1] = 0;
+				u_n[2] = 0;
+				KF.set_det_input_vector(u_n);
+			}
 
             // Run the KF
             KF.KF_run(t1, t2, n);
-            //print(x_n_n, 6, 1);
 
             // Delay depending on requirements
             
             // Update t1 and t2
-
-
-			// if (KFcounter == 1000){
-			// /*********************************************/
-			// 	//end = clock();
-			// 	//cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
-			// 	end = micros();
-			// 	time_elap = end-start;
-			// 	Serial.printf("Execution time of 1000 KF:  %u us\n", time_elap);
-			// 	KFcounter = 0;
-			// 	start = end;
-			// /*********************************************/
-			// }
-
-			// KFcounter++;
+			t2 = t1;
+			t1 = (micros()/100000.0) - t0;
 
     }
-
-
-
-
 
 	digitalWrite(LED_BUILTIN, LOW);
 	exit(0);
