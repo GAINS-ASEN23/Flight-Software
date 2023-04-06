@@ -68,9 +68,13 @@ void loop() {
 	bool contact = false;
 	bool thrusting = false;
 
-	float t0 = micros()/100000.0;			 // initial time
-    float t1 = t0;                           // Sample Time begin
-    float t2 = t1 + 0.01;                    // Sample Time end
+	float t0 = micros()/100000.0;			// initial time
+    float t1 = t0;                          // Sample Time begin
+    float t2 = t1 + 0.01;                   // Sample Time end
+
+	uint32_t thrust_start = 0; 			    // [microseconds] Keep track of how long to record accel data
+	uint32_t thrust_counter = 0;			
+	float thrust_avg = 0;
 
     uint16_t n_u = 3;                       // Number of deterministic inputs (3 - accelerations x,y,z)
     uint16_t n_x = 6;                       // Number of States (x, y, z, x_dot, y_dot, z_dot)
@@ -138,17 +142,11 @@ void loop() {
     float sigma_q_a[3] = {sigma_accel_x, sigma_accel_y, sigma_accel_z};
     KF.set_q_a(sigma_q_a);
 
-    // LOOP
+    /*  Main Loop */
     while (true)
     {
 			// Read any packets from GSW
 			GE.read();
-
-			// Read accelerometer data
-			int AO_P = analogRead(AP);
-			int AO_N = analogRead(AN);
-			int V_T = analogRead(VT);
-
 
             // Set the measurement vector, if ground contact is non-zero
 			if (contact){
@@ -166,7 +164,23 @@ void loop() {
 
             // Set the deterministic input vector, if thrusting is non-zero
 			if (thrusting){
-				u_n[0] = 0;
+				// Reset variables for this timestep of thrusting
+				thrust_start = micros();
+				thrust_counter = 0;
+				thrust_avg = 0;
+
+				// Average samples for a desired time in microseconds
+				while ((micros() - thrust_start) <  5000){
+					int A_P = analogRead(AP);
+					int A_N = analogRead(AN);
+					thrust_avg = thrust_avg + accel(A_P, A_N);
+					thrust_counter++;
+				}
+				thrust_avg = thrust_avg/thrust_counter;
+
+				// NEED TO CORRECT FOR BIAS, MISALIGNMENT, ETC. HERE
+
+				u_n[0] = thrust_avg;
 				u_n[1] = 0;
 				u_n[2] = 0;
 				KF.set_det_input_vector(u_n);

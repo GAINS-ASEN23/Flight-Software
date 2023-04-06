@@ -109,10 +109,10 @@ void set_p_ic(uint8_t state_size, float P_n_n[], float sigma[])
 }
 
 // Convert accelerometer differential pin inputs to g's (no corrections)
-float accel(int AO_P, int AO_N){
+float accel(int AP, int AN){
     double bins = 4096;         // Bins in analog output
     double range = 2.0;         // +/- 2 g output
-    double diff = AO_P - AO_N;  // Differential bin output
+    double diff = AP - AN;  // Differential bin output
 
     return (diff * range) / bins;
 }
@@ -120,6 +120,6 @@ float accel(int AO_P, int AO_N){
 
 
 // Convert temperature pin inputs to degrees C
-float temp(float V_T){
-    return ((V_T*90.0)/4096.0) + 35.0;  // Currently doesn't work
+float temp(float VT){
+    return ((VT*90.0)/4096.0) + 35.0;  // Currently doesn't work
 }
