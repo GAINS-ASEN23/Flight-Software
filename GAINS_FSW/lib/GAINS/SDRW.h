@@ -1,17 +1,90 @@
 /*
  ============================================================================
- Name        : SaveSD.h
- Author      : Jason Popich
+ Name        : SDRW.h
+ Author      : Jason Popich & Bennett Grow
  Version     : 0.1
  Copyright   : 
  Description : 
  ============================================================================
  */
 
-#ifndef _SD_H_
-#define _SD_H_
+#ifndef _SDRW_H_
+#define _SDRW_H_
 
 #include <SdFat.h>
+
+class SDRW {
+    private:
+        bool running = false;
+        SdFs sd;
+        FsFile file;
+        char foldername[10];
+        
+        bool openACCEL();
+        void printACCEL(uint32_t data);
+
+    public:
+        SDRW();
+        bool initFolder();
+
+        bool sampleACCEL(uint32_t data);
+
+}; 
+
+SDRW::SDRW() {
+    if (!sd.begin()) {
+        running = true;
+    }
+    else
+    {
+        Serial.println("Failed to begin SD!");
+    }
+}
+
+bool SDRW::initFolder() {
+    uint16_t counter = 1;
+
+    while(true) {
+        sprintf(foldername,"GAINS%04d",counter);
+
+        if(sd.exists(foldername)) {
+            counter+=1;
+            if(counter>999){return false;}
+        }
+        else {break;}
+    }
+    if(!sd.mkdir(foldername)) {
+        Serial.printf("1 SD - Error creating folder %s\n",foldername);
+        return false;
+        }
+    if(!sd.chdir(foldername)) {
+        Serial.printf("2 SD - Error entering folder %s\n",foldername);
+        return false;
+        }
+    return true;
+}
+
+bool SDRW::openACCEL(){
+    char filename[9];
+    sprintf(filename, "accel.csv");
+    file = sd.open(filename,FILE_WRITE);
+
+    return true;
+}
+
+void SDRW::printACCEL(uint32_t data) {
+    file.printf("%u,%u\n",micros(), data);
+    //Serial.printf("%u,%u\n",micros(), data);
+}
+
+bool SDRW::sampleACCEL(uint32_t data) {
+    openACCEL();
+    printACCEL(data);
+    file.close();
+    return true;
+}
+
+#endif
 
 
 // Example from Jason's past project:
@@ -173,4 +246,3 @@ bool SaveSD::sampleGPS(GPSdata* data) {
 
 */
 
-#endif
