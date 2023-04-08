@@ -13,6 +13,13 @@
 
 #include <SdFat.h>
 
+// Try to select the best SD card configuration.
+#if HAS_SDIO_CLASS
+    #define SD_CONFIG SdioConfig(FIFO_SDIO)
+#else  // HAS_SDIO_CLASS
+    #define SD_CONFIG SdSpiConfig(SS,DEDICATED_SPI, SD_SCK_MHZ(50))
+#endif  // HAS_SDIO_CLASS
+
 class SDRW {
     private:
         bool running = false;
@@ -32,7 +39,7 @@ class SDRW {
 }; 
 
 SDRW::SDRW() {
-    if (!sd.begin()) {
+    if (sd.begin(SD_CONFIG)) {
         running = true;
     }
     else
