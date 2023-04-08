@@ -1,8 +1,3 @@
-<<<<<<< HEAD
 *.csv
 *.mat
-=======
 
-KalmanFilterCW/statedata.mat
-*.mat
->>>>>>> f5973b684a44532a133872169d14189d27cab9ef

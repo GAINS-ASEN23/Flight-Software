@@ -15,223 +15,172 @@ clc;
 close all;
 tic;
 
-%% Sample Data
-% sampledata = readmatrix("StarTrackerSample.csv");
+%% Timestep
 
-N = 30000;                  % Number of data points
-dt = 2;                     % Time step
-t1 = 0;                     % Start time
-t2 = N*dt + t1;             % End time
-t = linspace(t1, t2, N);    % n times from t1 to t1
+N = 6794*2;                 % Number of data points
+dt = 1;                     % Time step [s]
+t1 = 0;                     % Start time [s]
+t2 = N*dt + t1;             % End time [s]
+t = linspace(t1, t2, N);    % N times from t1 to t1
 
 %% Set the initial conditions
 
-% The initial estimate state vector for the CW KF
-%x_n_n = sampledata(1,1:6)';
-mass_themis = 126;                      % Mass of the Themis Satellites [kg]
 mu_moon = 4.9048695e12;                 % Gravitational parameter of the Moon [m^3 s^-2]
 rad_moon = 1737447.78;                  % Radius of the Moon [m]
-a_moon = 1.74e6+5e4;                    % Semimajor axis of Moon's orbit around Earth [m]
-orbit_alt = 50000;                      % Orbit altitude above the moon [m]
-orbit_rad = rad_moon + orbit_alt;       % Orbit radius [m]
-n_mm = sqrt(mu_moon/(a_moon^3));        % Mean motion of the Moon around the Earth [rad/s] 
+orbit_alt = 50000;                      % Chief altitude above the moon [m]
+orbit_rad = orbit_alt + rad_moon;       % Orbital radius of the chief [m]
+n_mm = sqrt(mu_moon/(orbit_rad^3));     % Mean motion of the Chief around the Moon [rad/s] 
+A0 = 0;                                % Initial X offset of deputy from chief [m]
+
+T = 2*pi/n_mm;                          % Chief Orbital Period [s]
+df = 360/T/dt;                          % True anomaly step [deg/step]
+f = mod(df.*t, 360);                    % N true anomaly angles [deg]
+chief_V = sqrt(mu_moon/orbit_rad);      % Total chief velocity [m/s]       
+chief_state = [orbit_rad.*cosd(f); orbit_rad.*sind(f); zeros(1,N); -sind(f).*chief_V; cosd(f).*chief_V; zeros(1,N)]';
+
+
+% Initial estimate
 alpha = (0*pi) / 180;                   % Phase Angle Alpha of Circular Orbit
+x_0 = A0*cos(alpha);                    % Initial X Position [m] Hill Frame
+y_0 = -2*A0*sin(alpha);                 % Initial Y Position [m] Hill Frame
+x_dot_0 = -x_0*n_mm*sin(alpha);         % Initial Orbital X velocity [m/s] Hill Frame
+y_dot_0 =  -2*n_mm*x_0*cos(alpha);      % Initial Orbital Y velocity [m/s] Hill Frame
+x_n_n_G = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
+x_n_n_F = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
 
-x_0 = orbit_rad*cos(alpha);             % Initial Position [m] Hill Frame
-y_0 = -2*orbit_rad*sin(alpha);          % Initial Position [m] Hill Frame
-x_dot_0 = -x_0*n_mm*sin(alpha);         % Initial Orbital velocity [m/s] Hill Frame
-y_dot_0 =  -2*n_mm*x_0*cos(alpha);      % Initial Orbital velocity [m/s] Hill Frame
 
-x_n_n = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
-
-% The initial estimate uncertainty vector for the CW KF
-p_n_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+% Initial estimate uncertainty
+p_n_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
 
-% Generate the Thrust
-thrust_force = sample_thrust_generation(dt);
+[thrust_accel_noisy,thrust_accel_ideal] = sample_thrust(dt);
+sigma_thrust = 1;
+fprintf("\nVelocity impluse: %0.4f Ideal, %0.4f Noisy\n", dt*sum(thrust_accel_ideal),dt*sum(thrust_accel_noisy))
 
-% Convert the thurst in [N] to Acceleration [m/s^2]
+%% Run the Kalman Filter to Generate 'Truth Data'
+%{
+if isfile("GS_data.mat") == false
+    fprintf("Generating GS data...")
+    GS_data()
+    fprintf(" Done! \n")
+end
 
-
-
-%% Run the Kalman Filter
-state = [];
-error = [];
+load GS_data.mat
+%}
+%% Run the Kalman Filters
+stateG = [];
+stateF = [];
+errorF = [];
 
 % Thrust Variables
 j = 1;
 accel_flag = false;
 
+% Accelerator Process Noise Std. Dev.
+Qa_F = eye(3,3) .* 0.1;
+
+% Process Noise Covariance Matrix
+% Q_func = @(dt,n,sigma_ax,sigma_ay,sigma_az)reshape([1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).^2+1.0./n.^2.*sigma_ay.^2.*(cos(dt.*n)-1.0).^2.*4.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,0.0,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,0.0,1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).*(cos(dt.*n)-1.0).*-2.0+1.0./n.^2.*sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*2.0,1.0./n.^2.*sigma_ax.^2.*(cos(dt.*n)-1.0).^2.*4.0+1.0./n.^2.*sigma_ay.^2.*(sin(dt.*n).*4.0-dt.*n.*3.0).^2,0.0,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,0.0,0.0,1.0./n.^2.*sigma_az.^2.*sin(dt.*n).^2,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,(sigma_ax.^2.*cos(dt.*n).*sin(dt.*n))./n-(sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*4.0)./n,(sigma_ay.^2.*sin(dt.*n).*(sin(dt.*n).*4.0-dt.*n.*3.0).*2.0)./n+(sigma_ax.^2.*cos(dt.*n).*(cos(dt.*n)-1.0).*2.0)./n,0.0,sigma_ax.^2.*cos(dt.*n).^2+sigma_ay.^2.*sin(dt.*n).^2.*4.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,0.0,(sigma_ax.^2.*sin(dt.*n).^2.*-2.0)./n-(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(cos(dt.*n)-1.0).*2.0)./n,(sigma_ax.^2.*sin(dt.*n).*(cos(dt.*n)-1.0).*-4.0)./n+(sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).*(sin(dt.*n).*4.0-dt.*n.*3.0))./n,0.0,sigma_ay.^2.*sin(dt.*n).*(cos(dt.*n).*4.0-3.0).*2.0-sigma_ax.^2.*cos(dt.*n).*sin(dt.*n).*2.0,sigma_ax.^2.*sin(dt.*n).^2.*4.0+sigma_ay.^2.*(cos(dt.*n).*4.0-3.0).^2,0.0,0.0,0.0,(sigma_az.^2.*cos(dt.*n).*sin(dt.*n))./n,0.0,0.0,sigma_az.^2.*cos(dt.*n).^2],[6,6]);
+% Q = Q_func(dt,n_mm,sigma_a(1),sigma_a(2),sigma_a(3));
+
+
+
 for i = 1:N
-    % Start thrusting about halfway through the orbit (N/2)
-    if (i > N/2) && (j < length(thrust_force))
-        % Get the acceleration
-        a_x = (thrust_force(j)/mass_themis)*0.5;
-        a_y = (thrust_force(j)/mass_themis)*0.5;
-        a_z = 0;
+
+    % Control Input
+    U_n_G = zeros(3,1);
+    U_n_F = zeros(3,1);
+    
+%     % Unit vector pointing to deputy
+%     current_R = norm(chief_state(i,1:3));
+%     unit_pos = chief_state(i,1:3)./current_R;
+
+    % Start thrusting one quater of the way through the orbit (N/4)
+    if (i > N/4) && (j < length(thrust_accel_ideal))
+
+        % Accelerations
+        a_x_G = thrust_accel_ideal(j);
+        a_y_G = 0;
+        a_z_G = 0;
+
+        a_x_F = thrust_accel_noisy(j);
+        a_y_F = 0;
+        a_z_F = 0;
 
         % Set the current measurement vector
-        M_n = x_n_n + [0; 0; 0; a_x*dt; a_y*dt; a_z*dt];
+        %M_n = [0; 0; 0; a_x*dt; a_y*dt; a_z*dt] + x_n_n;
         
         % Get the current Measurement Error
-        R_n = p_n_n + [0; 0; 0; 1; 1; 1];
+        %R_n = p_n_n + [zeros(3) zeros(3); zeros(3) eye(3)*sigma_thrust];
         
-        % Set the accel flag
-        accel_flag = true;
+        % Control Input
+        U_n_G(1) = U_n_G(1) + a_x_G;
+        U_n_G(2) = U_n_G(2) + a_y_G;
+        U_n_G(3) = U_n_G(3) + a_z_G;
+
+        U_n_F(1) = U_n_F(1) + a_x_F;
+        U_n_F(2) = U_n_F(2) + a_y_F;
+        U_n_F(3) = U_n_F(3) + a_z_F;
         
         % Increment the j index to get the next acceleration
         j = j + 1;
-    else
-        % Set the current measurement vector
-        M_n = zeros(6,1);
-        
-        % Get the current Measurement Error
-        R_n = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
-        
-        % Set the accel flag
-        accel_flag = false;
+
     end
     
-    % Get the current Input
-    U_n = zeros(3,1);
-    
-    % Run the KF equations for current step
-    [x_n_n, p_n_n] = KF_cw(M_n, U_n, x_n_n, p_n_n, R_n, dt, accel_flag);
+    % Handle time edge case
+    if i == 1
+        t1 = 0;
+    else
+        t1 = t(i-1);
+    end
+    t2 = t(i);
+
+
+    % Regain contact three quaters of the way through the orbit (N*3/4)
+    if (i > N*3/4) 
+        M_n_F = x_n_n_G;
+        R_n_F = [eye(3)*0.0001 zeros(3); zeros(3) eye(3)*0.0001];
+        [x_n_n_F, p_n_n_F] = KF_cw(n_mm, Qa_F, M_n_F, U_n_F, x_n_n_F, p_n_n_F, R_n_F, dt, t1, t2, true);
+
+    else
+        M_n_F = zeros(6,1);
+        R_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
+        [x_n_n_F, p_n_n_F] = KF_cw(n_mm, Qa_F, M_n_F, U_n_F, x_n_n_F, p_n_n_F, R_n_F, dt, t1, t2, false);
+
+    end
+
+
+    x_n_n_G = ground_cw(n_mm, U_n_G, x_n_n_G, dt, t1, t2);
     
     % Save State and Error
-    state = [state; x_n_n'];
-    error = [error; p_n_n];
+    stateG = [stateG; x_n_n_G'];
+    stateF = [stateF; x_n_n_F'];
+    errorF = [errorF; p_n_n_F];
 
 end
+
+% chief_state = circular orbit of chief --> "nominal" [Moon centered frame]
+% state = KF output --> "deviations" [Hill frame]
+% deputy_state = c_s+s KF output in same frame as chief state
+
+deputy_state_F = chief_state + stateF;
+deputy_state_G = chief_state + stateG;
 
 %% Plot Results
-plot_pos_vel = true;
-plot3_pos = true;
+%{
+plot_1(stateF, t, "Deputy Deviations From Chief Orbit [Hill Frame]")
+plot_1_3D(stateF, "Deputy Deviations From Chief Orbit [Hill Frame]")
+% plot_1(chief_state, t, "Chief")
+% plot_1(deputy_state, t, "Deputy")
 
-if plot_pos_vel == true
-    % figure;
-    % title("Acceleration [m/s^2]")
-    % plot(t, A)
-    
-    figure;
-    title("Position (m)")
-    subplot(3,1,1)
-    plot(t(1:length(state(:,1))), state(:,1));
-    hold on;
-    %plot(t, sampledata(1:n,1));
-    ylabel("x (m)")
-    
-    subplot(3,1,2)
-    plot(t(1:length(state(:,1))), state(:,2));
-    hold on;
-    %plot(t, sampledata(1:n,2));
-    ylabel("y (m)")
-    
-    subplot(3,1,3)
-    plot(t(1:length(state(:,1))), state(:,3));
-    hold on;
-    %plot(t, sampledata(1:n,3));
-    ylabel("z (m)")
-    
-    figure;
-    title("Velocity (m)")
-    subplot(3,1,1)
-    plot(t(1:length(state(:,1))), state(:,4));
-    hold on;
-    %plot(t, sampledata(1:n,4));
-    ylabel("${\dot{x}}$ (m)", 'interpreter', 'latex', 'FontWeight', 'bold')
-    
-    subplot(3,1,2)
-    plot(t(1:length(state(:,1))), state(:,5));
-    hold on;
-    %plot(t, sampledata(1:n,5));
-    ylabel("${\dot{y}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
-    
-    subplot(3,1,3)
-    plot(t(1:length(state(:,1))), state(:,6));
-    hold on;
-    %plot(t, sampledata(1:n,6));
-    ylabel("${\dot{z}}$ (m)", 'interpreter', 'latex', 'FontWeight','bold')
+labels1 = ["Chief Vs Deputy Orbits", "Chief", "Deputy"];
+plot_2(chief_state, deputy_state_F, t, labels1)
+plot_2_3D(chief_state, deputy_state_F, labels1)
+%}
+plot_1(stateG-stateF, t, "Error in Flight Deviations from Ground Deviations [Hill]");
+labels2 = ["Ground vs. Flight Deviations from Chief Orbit [Hill]", "Ground", "Flight"];
+plot_2(stateG, stateF, t, labels2)
 
-end
-
-if plot3_pos == true
-    figure;
-    [sx, sy, sz] = sphere(1000);
-    surf(sx.*rad_moon,sy.*rad_moon,sz.*rad_moon, 'EdgeColor',[192/256 192/256 192/256]);
-    hold on
-
-    title('3D Position');
-    plot3(state(:,1), state(:,2), state(:,3), 'b', 'LineWidth', 3)
-    xlabel("x (m)")
-    ylabel("y (m)")
-    zlabel("z (m)")
-    axis equal;
-        
-    %plot3(sampledata(1:n,1), sampledata(1:n,2), sampledata(1:n,3), 'r')
-end
 
 toc
-
-
-%% Functions
-function [thrust_newton] = sample_thrust_generation(dt)
-    %% Create Noise
-    timevec = 1:dt:(60*60*2);
-    noisevec = randn(1,length(timevec));
-    func = @(x) noisevec(x);
-
-    %% Create Thrust Curve
-    start = 0:1:20;
-    val1 = zeros(size(start));
-
-    leadup = 20:1:30;
-    val2 = -0.4*(20-leadup);
-
-    peak = 30:1:83;
-    val3 = val2(end)*ones(size(peak));
-
-    leadout = 83:1:93;
-    val4 = 0.4*(93-leadout);
-
-    ending = 93:1:113;
-    val5 = zeros(size(ending));
-
-
-    %% Add white noise
-    sn_white1 = awgn(val1,5);
-    sn_white2(1,1) = sn_white1(end);
-    sn_white2(1,2:size(val2,2)) = awgn(val2(2:end),5);
-    sn_white3(1,1) = sn_white2(end);
-    sn_white3(1,2:size(val3,2)) = awgn(val3(2:end),5);
-    sn_white4(1,1) = sn_white3(end);
-    sn_white4(1,2:size(val4,2)) = awgn(val4(2:end),5);
-    sn_white5(1,1) = sn_white4(end);
-    sn_white5(1,2:size(val5,2)) = awgn(val5(2:end),5);
-
-
-    %% Plot the Thrust
-    figure;
-    plot(start,val1,'--b','LineWidth',1);
-    hold on; grid minor;
-
-    plot(leadup,val2,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(peak,val3,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(leadout,val4,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(ending,val5,'--b','LineWidth',1,'HandleVisibility','off');
-
-    plot(start,sn_white1,'-r','LineWidth',1.5);
-    plot(leadup,sn_white2,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(peak,sn_white3,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(leadout,sn_white4,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(ending,sn_white5,'-r','LineWidth',1.5,'HandleVisibility','off');
-    xlim([0 113]);
-    xlabel('Time [sec]');
-    ylabel('Thrust [N]'); 
-    title('SAMPLE Thrust Curve');
-    legend('Ideal Thrust Curve','Measured Thrust Curve');
-    
-    thrust_newton = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5'];
-end
