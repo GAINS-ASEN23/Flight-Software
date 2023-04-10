@@ -36,7 +36,8 @@
 clear all; close all; clc;
 
 %% Local gravitational constant
-g_sl = 9.80665;                % [m/s^2] Acceleration at sea level
+
+g_sl = 9.80665;             % [m/s^2] Acceleration at sea level
 r_e =  6.3781 * 10^6;       % [m] Earth's radius
 h = 1606;                   % [m] Local altitude
 % https://www.advancedconverter.com/map-tools/find-altitude-by-coordinates

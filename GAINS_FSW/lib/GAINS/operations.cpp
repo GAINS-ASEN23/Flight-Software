@@ -66,18 +66,19 @@ void eye(float A[], uint16_t N)
     }
 }
 
-
+// Calculate the mean motion
 float calculate_mean_motion(float mu, float rad_attractor, float orbit_alt)
 {
-    // Calculate the mean motion
     return sqrt(mu/(pow(orbit_alt + rad_attractor,3)));
 }
 
+// Set Clohessy-Wiltshire initial conditions
 void set_cw_ics(float x_n_n[], float alpha, float beta, float deviation, float n)
 {
     float alpha_rad = (alpha * 3.14) / 180;                 // Phase Angle Alpha of Circular Orbit [rad]
-    float beta_rad = (beta * 3.14) / 180;                   // Phase Angle Beta of Circular Orbit [rad]
-    float B_0 = 2*deviation;                                // Out of plane sinusoidal amplitude [m]
+    // UNUSED:
+    // float beta_rad = (beta * 3.14) / 180;                   // Phase Angle Beta of Circular Orbit [rad]
+    // float B_0 = 2*deviation;                                // Out of plane sinusoidal amplitude [m]
 
     float x_0 = deviation*cos(alpha_rad);                   // Initial X Position [m] Hill Frame
     float y_0 = -2*deviation*sin(alpha_rad);                // Initial Y Position [m] Hill Frame
@@ -97,6 +98,7 @@ void set_cw_ics(float x_n_n[], float alpha, float beta, float deviation, float n
     x_n_n[5] = z_dot_0;
 }
 
+// Set covariance initial conditions
 void set_p_ic(uint8_t state_size, float P_n_n[], float sigma[])
 {
     // Populate the diagonals based on the sigma vector given
@@ -104,4 +106,20 @@ void set_p_ic(uint8_t state_size, float P_n_n[], float sigma[])
     {
         P_n_n[(state_size + 1) * i] = pow(sigma[i], 2);
     }
+}
+
+// Convert accelerometer differential pin inputs to g's (no corrections)
+float accel(int AP, int AN){
+    double bins = 4096;         // Bins in analog output
+    double range = 2.0;         // +/- 2 g output
+    double diff = AP - AN;  // Differential bin output
+
+    return (diff * range) / bins;
+}
+
+
+
+// Convert temperature pin inputs to degrees C
+float temp(float VT){
+    return ((VT*90.0)/4096.0) + 35.0;  // Currently doesn't work
 }

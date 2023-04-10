@@ -1,17 +1,97 @@
 /*
  ============================================================================
- Name        : SaveSD.h
- Author      : Jason Popich
+ Name        : SDRW.h
+ Author      : Jason Popich & Bennett Grow
  Version     : 0.1
  Copyright   : 
  Description : 
  ============================================================================
  */
 
-#ifndef _SaveSD_H_
-#define _SaveSD_H_
+#ifndef _SDRW_H_
+#define _SDRW_H_
 
 #include <SdFat.h>
+
+// Try to select the best SD card configuration.
+#if HAS_SDIO_CLASS
+    #define SD_CONFIG SdioConfig(FIFO_SDIO)
+#else  // HAS_SDIO_CLASS
+    #define SD_CONFIG SdSpiConfig(SS,DEDICATED_SPI, SD_SCK_MHZ(50))
+#endif  // HAS_SDIO_CLASS
+
+class SDRW {
+    private:
+        bool running = false;
+        SdFs sd;
+        FsFile file;
+        char foldername[10];
+        
+        bool openACCEL();
+        void printACCEL(float data);
+
+    public:
+        SDRW();
+        bool initFolder();
+
+        bool sampleACCEL(float data);
+
+}; 
+
+SDRW::SDRW() {
+    if (sd.begin(SD_CONFIG)) {
+        running = true;
+    }
+    else
+    {
+        Serial.println("Failed to begin SD!");
+    }
+}
+
+bool SDRW::initFolder() {
+    uint16_t counter = 1;
+
+    while(true) {
+        sprintf(foldername,"GAINS%04d",counter);
+
+        if(sd.exists(foldername)) {
+            counter+=1;
+            if(counter>999){return false;}
+        }
+        else {break;}
+    }
+    if(!sd.mkdir(foldername)) {
+        Serial.printf("1 SD - Error creating folder %s\n",foldername);
+        return false;
+        }
+    if(!sd.chdir(foldername)) {
+        Serial.printf("2 SD - Error entering folder %s\n",foldername);
+        return false;
+        }
+    return true;
+}
+
+bool SDRW::openACCEL(){
+    char filename[9];
+    sprintf(filename, "accel.csv");
+    file = sd.open(filename,FILE_WRITE);
+
+    return true;
+}
+
+void SDRW::printACCEL(float data) {
+    file.printf("%u,%.7f\n",micros(), data);
+    //Serial.printf("%u,%u\n",micros(), data);
+}
+
+bool SDRW::sampleACCEL(float data) {
+    openACCEL();
+    printACCEL(data);
+    file.close();
+    return true;
+}
+
+#endif
 
 
 // Example from Jason's past project:
@@ -173,4 +253,3 @@ bool SaveSD::sampleGPS(GPSdata* data) {
 
 */
 
-#endif
