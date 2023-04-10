@@ -76,10 +76,19 @@ void loop() {
 		SDRW SD;
 		SD.initFolder();
 
-		for (uint32_t logCount=0; logCount < 1000; logCount++){
-			SD.sampleACCEL(logCount);
+		int A_P;
+		int A_N;
+
+		uint32_t start = micros();
+
+		while ((micros() - start) <= 20000000){ // record data for 20 seconds
+			A_P = analogRead(AP);
+			A_N = analogRead(AN);
+			SD.sampleACCEL(accel(A_P, A_N));
 		}
+		
 		Serial.println("SD - End");
+
 	}
 
 

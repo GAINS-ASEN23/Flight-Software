@@ -28,13 +28,13 @@ class SDRW {
         char foldername[10];
         
         bool openACCEL();
-        void printACCEL(uint32_t data);
+        void printACCEL(float data);
 
     public:
         SDRW();
         bool initFolder();
 
-        bool sampleACCEL(uint32_t data);
+        bool sampleACCEL(float data);
 
 }; 
 
@@ -79,12 +79,12 @@ bool SDRW::openACCEL(){
     return true;
 }
 
-void SDRW::printACCEL(uint32_t data) {
-    file.printf("%u,%u\n",micros(), data);
+void SDRW::printACCEL(float data) {
+    file.printf("%u,%.7f\n",micros(), data);
     //Serial.printf("%u,%u\n",micros(), data);
 }
 
-bool SDRW::sampleACCEL(uint32_t data) {
+bool SDRW::sampleACCEL(float data) {
     openACCEL();
     printACCEL(data);
     file.close();
