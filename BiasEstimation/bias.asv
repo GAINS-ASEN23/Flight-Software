@@ -53,27 +53,24 @@ g_conv = g/g_sl;            % [g's]
 
 %% Reference Gravity
 ang = linspace(-180,0,9);   % [deg] 
-ref = g_conv.*cosd(ang);   %[g's]
+gvec = g_conv.*cosd(ang);   %[g's]
 
 %% Single Axis
-B = mean(accels);       % (Hayal 2.5)
+B = mean(accels);
 K = g_conv;
-
 % S = (sum(abs(accels)) - sum(abs(gvec))) / (length(accels)*K);
-%accels2 = [accels(1:4) accels(6:`d9)];
-%gvec2 = [gvec(1:4) gvec(6:9)];
+accels2 = [accels(1:4) accels(6:`d9)];
+gvec2 = [gvec(1:4) gvec(6:9)];
 
-% SF = (sum(abs(accels)) - sum(abs(ref))) / sum(abs(ref));      
-S = (accels(end) - accels(1) - 2*K)/(2*K);                      % (Hayal 2.6)
+%S = (sum(abs(accels2)) - sum(abs(gvec2))) / sum(abs(gvec2));
+S = (accels(end) - accels(1) -2*K)/(2*K);
 
 fprintf("Single Axis Bias: %.8f   Scale Factor: %.8f \n", B, S)
 
-ref
+gvec
 accels
 
-adj_ref = ref*(1+S)+B
-
-error_percentage = abs(abs(adj_ref)-abs(accels))./abs(accels).*100
+new = gvec*(1+S)+B
 
 %% Three Axis
 %{
