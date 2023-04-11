@@ -78,13 +78,15 @@ void loop() {
 
 		int A_P;
 		int A_N;
+		int V_T;
 
 		uint32_t start = micros();
 
-		while ((micros() - start) <= 20000000){ // record data for 20 seconds
+		while ((micros() - start) <= 300000000){ // record data for 300 seconds
 			A_P = analogRead(AP);
 			A_N = analogRead(AN);
-			SD.sampleACCEL(accel(A_P, A_N));
+			V_T = analogRead(VT);
+			SD.sampleACCEL(accel(A_P, A_N), temp(V_T));
 		}
 		
 		Serial.println("SD - End");
