@@ -15,14 +15,15 @@
 
 
 /*  OPERATING CONDITIONS  */
+#define DO_CW_OR_K 1 		// 0 to use CW eqns, 1 to use kinematic eqns
 #define DO_ETHERNET 0		// Perform communications over ethernet
 #define DO_SD 1				// Write data to an SD card
 #define DO_KF 0				// Run the Kalman Filter
 
 /*  PIN DEFINITIONS  */
-#define ADC_RES 21 			// ADC resolution (bits)
+#define ADC_RES 12 			// ADC resolution (bits)
 #define AP 24 				// Positive accelerometer differential pin
-#define AN	25 				// Negative accelerometer differential pin
+#define AN 25 				// Negative accelerometer differential pin
 #define VT 20 				// Temperature pin from accelerometer
 
 
@@ -76,23 +77,22 @@ void loop() {
 		SDRW SD;
 		SD.initFolder();
 
-		int A_P;
-		int A_N;
-		int V_T;
+		float A_P;
+		float A_N;
+		float V_T;
 
 		uint32_t start = micros();
 
-		while ((micros() - start) <= 300000000){ // record data for 300 seconds
+		while (true) { //((micros() - start) <= 1200000000){ // record data for 20 minutes
 			A_P = analogRead(AP);
 			A_N = analogRead(AN);
 			V_T = analogRead(VT);
-			SD.sampleACCEL(accel(A_P, A_N), temp(V_T));
+			SD.sampleACCEL(accel(A_P, A_N), V_T);
 		}
 		
 		Serial.println("SD - End");
 
 	}
-
 
 
 	if (DO_KF){
@@ -158,7 +158,7 @@ void loop() {
 		set_p_ic(n_x, P_n_n, sigma_p_n_n);
 
 		// Create the KF object
-		KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n);
+		KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n, DO_CW_OR_K);
 
 		/*  Set the measurement covariance matrix   */
 		float sigma_position_ground = 1000;
