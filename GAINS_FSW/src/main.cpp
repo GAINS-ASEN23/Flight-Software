@@ -77,9 +77,9 @@ void loop() {
 		SDRW SD;
 		SD.initFolder();
 
-		int A_P;
-		int A_N;
-		int V_T;
+		float A_P;
+		float A_N;
+		float V_T;
 
 		uint32_t start = micros();
 
