@@ -36,6 +36,42 @@ xlabel("Truth [g]")
 ylabel("Measured [g]")
 title("SDI 1521 Calibration: Measured vs. Truth Accelerations")
 legend("Data", "Best Fit")
+%xlim([-0.02,0.02])
 
 grid on 
 grid minor
+
+%% Verifying
+BRver = accels/p(1) - p(2);
+bennettsK = 1.0876;
+Bennettver = accels/bennettsK - p(2);
+disp(abs((ref - BRver)))
+disp(abs((ref - Bennettver)))
+diff = ref-BRver;
+bennett =bennettsK*x + p(2);
+%plot(x,bennett,'b',"LineWidth", 2)
+
+gRange = y(abs(x-y) <= 0.02);
+
+
+%% Determine INS g range
+ref(4:6)
+diff(4:6)
+line = polyfit(ref(4:6),-diff(4:6),1);
+% x = linspace(diff(4),diff(6), 1000);
+range = linspace(-1,1,1000);
+y2 = line(1)*x + line(2);
+
+figure
+plot(range*line(1) + line(2),range,'k',"LineWidth", 2)
+hold on
+xline(0.02,"r--","LineWidth", 2)
+xline(-0.02,"r--","LineWidth", 2)
+yline((0.02-line(2))/line(1), 'r--',"LineWidth", 2)
+yline(-(0.02-line(2))/line(1), 'r--',"LineWidth", 2)
+xlim([-0.025, 0.025])
+grid on
+grid minor
+xlabel("Calibration Percentage")
+ylabel("Acceleration [g]")
+title("Acceleration vs Bias Calibration Percentage")
