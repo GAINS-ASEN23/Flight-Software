@@ -1,0 +1,27 @@
+
+clc; close all; clear all;
+
+%{
+accels = zeros(1,5);
+for i = 1:9
+    d = readmatrix(strcat('GAINS 8 Pos Test/GAINS000', string(i), '/accel.csv'));
+    accels(i) = mean(d(:,2));
+end
+%}
+
+
+d1 = readmatrix(strcat('GAINS 8 Pos Test/GAINS00', '11', '/accel.csv'));
+d2 = readmatrix(strcat('GAINS 8 Pos Test/GAINS00', '12', '/accel.csv'));
+d3 = readmatrix(strcat('GAINS 8 Pos Test/GAINS00', '13', '/accel.csv'));
+d4 = readmatrix(strcat('GAINS 8 Pos Test/GAINS00', '14', '/accel.csv'));
+d5 = readmatrix(strcat('GAINS 8 Pos Test/GAINS00', '15', '/accel.csv'));
+
+d1(:,1) = d1(:,1)-d1(1,1);
+d1(:,1) = d1(:,1)-d1(1,1);
+d1(:,1) = d1(:,1)-d1(1,1);
+d1(:,1) = d1(:,1)-d1(1,1);
+d1(:,1) = d1(:,1)-d1(1,1);
+
+ambient_bin = average(d1(:,3));
+
+

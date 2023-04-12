@@ -27,7 +27,7 @@ class KalmanFilter
     KalmanFilter(){};
 
     // Initialization Constructor
-    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n);
+    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k);
 
     // Default Destructor
     ~KalmanFilter()
@@ -71,6 +71,9 @@ class KalmanFilter
     private:
 
     /*  PRIVATE VARIABLES   */
+
+    // Set 0 for CW, 1 for Kinematics
+    bool CW_or_K = 0; 
 
     float t1 = 0;                               // Sample Time begin
     float t2 = 0;                               // Sample Time end
