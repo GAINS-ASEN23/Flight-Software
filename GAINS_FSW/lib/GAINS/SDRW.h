@@ -30,14 +30,14 @@ class SDRW {
         bool openACCEL();
         void printACCEL(float accel, float temp);
         bool openSTATE();
-        void printSTATE(float t1, float *state);
+        void printSTATE(float t1, float accel, float *state);
 
     public:
         SDRW();
         bool initFolder();
 
         bool sampleACCEL(float accel, float temp);
-        bool sampleSTATE(float t1, float *state);
+        bool sampleSTATE(float t1, float accel, float *state);
 }; 
 
 SDRW::SDRW() {
@@ -101,14 +101,14 @@ bool SDRW::openSTATE(){
     return true;
 }
 
-void SDRW::printSTATE(float t1, float *state) {
-    file.printf("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f\n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
+void SDRW::printSTATE(float t1, float accel, float *state) {
+    file.printf("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f\n", t1, accel, state[0], state[1], state[2], state[3], state[4], state[5]);
     //Serial.printf("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f\n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
 }
 
-bool SDRW::sampleSTATE(float t1, float *state) {
+bool SDRW::sampleSTATE(float t1, float accel, float *state) {
     openSTATE();
-    printSTATE(t1, state);
+    printSTATE(t1, accel, state);
     file.close();
     return true;
 }

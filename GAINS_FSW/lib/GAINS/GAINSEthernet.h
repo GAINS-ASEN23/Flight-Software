@@ -110,20 +110,20 @@ class GAINSEthernet{
         }
 
         // Send a message to a specific IP and port
-        void send(uint8_t* replyBuffer, IPAddress IP, uint16_t PORT){
+        void send(uint8_t* replyBuffer, size_t size, IPAddress IP, uint16_t PORT){
             GAINSEthernet::UDP.beginPacket(IP, PORT);
-            GAINSEthernet::UDP.write(replyBuffer, sizeof(replyBuffer));
+            GAINSEthernet::UDP.write(replyBuffer, size);
             if (GAINSEthernet::UDP.endPacket() == 0) {
                 Serial.println("Error Sending Message");
             }
             else {
-                Serial.printf("Packet to %d.%d.%d.%d:%d\n", IP[0],IP[1],IP[2],IP[3],PORT);
+                //Serial.printf("Packet to %d.%d.%d.%d:%d\n", IP[0],IP[1],IP[2],IP[3],PORT);
             }
         }
 
         // Send a message to whatever device just sent you a packet
         void send_return(uint8_t* replyBuffer){
-            send(replyBuffer, GAINSEthernet::UDP.remoteIP(), GAINSEthernet::UDP.remotePort());
+            send(replyBuffer, sizeof(replyBuffer), GAINSEthernet::UDP.remoteIP(), GAINSEthernet::UDP.remotePort());
         }
 
         /*  Getters and Setters  */
@@ -148,11 +148,16 @@ class GAINSEthernet{
         }
        
         // Function to set the return data vector for the ground
-        void send_ground_update(float* state, uint32_t systime, IPAddress IP, uint16_t port)
+        void send_ground_update(float t1, float* state, uint32_t systime, IPAddress IP, uint16_t port)
         {
-            float time = systime / 1000.0;
-            GAINS_TLM_PACKET tlm_send =  GAINS_TLM_PACKET_constructor(state[0], state[1], state[2], state[3], state[4], state[5], time, 0, 1, 0, 0, 0, 0);
-            //send(tlm_send, IP, port);
+            //float time = systime / 1000.0;
+            //Serial.printf("GE - time: %.4f\n",time);
+            GAINS_TLM_PACKET tlm_send =  GAINS_TLM_PACKET_constructor(state[0], state[1], state[2], state[3], state[4], state[5], t1, 0, 1, 0, 0, 0, 0);
+            size_t packet_size = sizeof(tlm_send);
+            uint8_t buffer[packet_size];
+            memcpy(&buffer, &tlm_send, packet_size);
+
+            send(buffer, packet_size, IP, port);
         }
 };
 
