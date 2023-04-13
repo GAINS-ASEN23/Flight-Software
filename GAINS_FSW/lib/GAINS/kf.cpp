@@ -15,10 +15,10 @@ Description : This file contains the Kalman Filter (KF) function definitions
 /*********************************************/
 
 // Initialization Constructor
-KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k)
+KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CWorK)
 {
     // Use CW or Kinematics
-    KalmanFilter::CW_or_K = CW_or_K;
+    KalmanFilter::CW_or_K = CWorK;
 
     // Set the KF environment vars
     KalmanFilter::n_x = n_x;
@@ -66,6 +66,7 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
 
 void KalmanFilter::KF_run(float t1, float t2, float n)
 {
+
     // Update the time
     KalmanFilter::t1 = t1;
     KalmanFilter::t2 = t2;
@@ -256,7 +257,7 @@ void KalmanFilter::compute_kalman_gain()
     // Invert HP_n_n_m_1HTR_n
     if(inv(HP_n_n_m_1HTR_n, KalmanFilter::n_z) == 0)
     {
-        printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
+        //printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
     }
 
     // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
@@ -273,10 +274,12 @@ void KalmanFilter::estimate_state()
     float Z_nHX_n_n_m_1[KalmanFilter::n_z];
     float K_nZ_nHX_n_n_m_1[KalmanFilter::n_x];
 
+
     // Set the memory for the temp vars
     memset(HX_n_n_m_1, 0, KalmanFilter::n_z*sizeof(float));
     memset(Z_nHX_n_n_m_1, 0, KalmanFilter::n_z*sizeof(float));
     memset(K_nZ_nHX_n_n_m_1, 0, KalmanFilter::n_x*sizeof(float));
+
 
     // HX_n_n_m_1 = H * x_n_p_1_n
     mul(KalmanFilter::H, x_n_p_1_n, HX_n_n_m_1, KalmanFilter::n_z, KalmanFilter::n_x, 1);

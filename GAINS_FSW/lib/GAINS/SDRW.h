@@ -28,14 +28,16 @@ class SDRW {
         char foldername[10];
         
         bool openACCEL();
-        void printACCEL(float accel, uint32_t temp);
+        void printACCEL(float accel, float temp);
+        bool openSTATE();
+        void printSTATE(float t1, float *state);
 
     public:
         SDRW();
         bool initFolder();
 
-        bool sampleACCEL(float accel, uint32_t temp);
-
+        bool sampleACCEL(float accel, float temp);
+        bool sampleSTATE(float t1, float *state);
 }; 
 
 SDRW::SDRW() {
@@ -79,17 +81,38 @@ bool SDRW::openACCEL(){
     return true;
 }
 
-void SDRW::printACCEL(float accel, uint32_t temp) {
-    file.printf("%u,%.7f,%u\n",micros(), accel, temp);
-    //Serial.printf("%u,%u\n",micros(), data);
+void SDRW::printACCEL(float accel, float temp) {
+    file.printf("%u,%.8f,%.8f\n",micros(), accel, temp);
+    Serial.printf("%u,%.8f,%.8f\n",micros(), accel, temp);
 }
 
-bool SDRW::sampleACCEL(float accel, uint32_t temp) {
+bool SDRW::sampleACCEL(float accel, float temp) {
     openACCEL();
     printACCEL(accel,temp);
     file.close();
     return true;
 }
+
+bool SDRW::openSTATE(){
+    char filename[9];
+    sprintf(filename, "state.csv");
+    file = sd.open(filename,FILE_WRITE);
+
+    return true;
+}
+
+void SDRW::printSTATE(float t1, float *state) {
+    file.printf("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f\n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
+    //Serial.printf("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f\n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
+}
+
+bool SDRW::sampleSTATE(float t1, float *state) {
+    openSTATE();
+    printSTATE(t1, state);
+    file.close();
+    return true;
+}
+
 
 #endif
 

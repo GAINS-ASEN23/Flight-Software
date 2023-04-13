@@ -53,6 +53,7 @@ bennett =bennettsK*x + p(2);
 
 gRange = y(abs(x-y) <= 0.02);
 
+error = (BRver - ref)./ref.*100
 
 %% Determine INS g range
 ref(4:6)
@@ -75,3 +76,4 @@ grid minor
 xlabel("Calibration Percentage")
 ylabel("Acceleration [g]")
 title("Acceleration vs Bias Calibration Percentage")
+

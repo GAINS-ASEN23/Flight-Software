@@ -58,8 +58,12 @@ class KalmanFilter
     /*  PUBLIC KF FUNCTIONS  */
 
     void KF_run(float t1, float t2, float n);
-    void get_state();
-    void get_uncertainty();
+    float* get_state(){
+        return x_n_n;
+    }
+    float* get_uncertainty(){
+        return P_n_n;
+    }
 
     void set_r_n(float sigma[]);
     void set_det_input_vector(float* u_n);

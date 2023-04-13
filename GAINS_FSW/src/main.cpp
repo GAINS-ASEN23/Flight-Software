@@ -2,7 +2,7 @@
  ============================================================================
  Name        : main.cpp
  Author      : Bennett Grow, Kaylie Rick, Jason Popich
- Version     : 0.2
+ Version     : 0.3
  Copyright   : 
  Description : Main script to run all GAINS Flight Software
  ============================================================================
@@ -12,19 +12,13 @@
 #include <GAINSEthernet.h>
 #include <kf.h>
 #include <SDRW.h>
-
+#include <sensor.h>
 
 /*  OPERATING CONDITIONS  */
 #define DO_CW_OR_K 1 		// 0 to use CW eqns, 1 to use kinematic eqns
 #define DO_ETHERNET 0		// Perform communications over ethernet
-#define DO_SD 1				// Write data to an SD card
-#define DO_KF 0				// Run the Kalman Filter
-
-/*  PIN DEFINITIONS  */
-#define ADC_RES 12 			// ADC resolution (bits)
-#define AP 24 				// Positive accelerometer differential pin
-#define AN 25 				// Negative accelerometer differential pin
-#define VT 20 				// Temperature pin from accelerometer
+#define DO_SD 0				// Write data to an SD card
+#define DO_KF 1				// Run the Kalman Filter
 
 
 void setup() {
@@ -36,9 +30,6 @@ void setup() {
 	while (!Serial){
 		;
 	}
-
-	// Set the resolution of the built-in ADC
-	analogReadResolution(ADC_RES);
 
 }
 
@@ -68,7 +59,7 @@ void loop() {
 		Serial.printf("========================================================================\n");
 
 		// Send and recieve a message over UDP
-		GE.send((char*)"GAINS FSW Initialized", GE.getRemoteIP(), GE.getRemotePort());
+		//GE.send((char*)"GAINS FSW Initialized", GE.getRemoteIP(), GE.getRemotePort());
 	}
 
 	if (DO_SD){
@@ -77,17 +68,14 @@ void loop() {
 		SDRW SD;
 		SD.initFolder();
 
-		float A_P;
-		float A_N;
-		float V_T;
-
-		uint32_t start = micros();
+		sensor S;
+		float accel = 0;
+		int temp = 0;
 
 		while (true) { //((micros() - start) <= 1200000000){ // record data for 20 minutes
-			A_P = analogRead(AP);
-			A_N = analogRead(AN);
-			V_T = analogRead(VT);
-			SD.sampleACCEL(accel(A_P, A_N), V_T);
+			accel = S.get_acceleration();
+			temp = S.get_temperature();
+			SD.sampleACCEL(accel, temp);
 		}
 		
 		Serial.println("SD - End");
@@ -100,10 +88,10 @@ void loop() {
 
 		/*    Set System Variables    */
 
-		bool contact = false;
-		bool thrusting = false;
+		bool contact = true;
+		bool thrusting = true;
 
-		float t0 = micros()/100000.0;			// initial time
+		float t0 = millis()/1000.0;			// initial time
 		float t1 = t0;                          // Sample Time begin
 		float t2 = t1 + 0.01;                   // Sample Time end
 
@@ -143,7 +131,15 @@ void loop() {
 		float beta = 0;                     // The Phase Angle Beta [deg]
 		float deviation = 50000;            // The deviation in position from the chief satellite [m]
 
-		set_cw_ics(x_n_n, alpha, beta, deviation, n);
+		//set_cw_ics(x_n_n, alpha, beta, deviation, n);
+		x_n_n[0] = 0;
+		x_n_n[1] = 0;
+		x_n_n[2] = 0;
+		x_n_n[3] = 0;
+		x_n_n[4] = 0;
+		x_n_n[5] = 0;
+
+
 
 		/*    Set the initial uncertainty matrix    */
 
@@ -177,7 +173,18 @@ void loop() {
 		float sigma_q_a[3] = {sigma_accel_x, sigma_accel_y, sigma_accel_z};
 		KF.set_q_a(sigma_q_a);
 
+		// state for saving/sending
+		float* state = x_n_n;
+
+		// Save to SD card
+		SDRW SD;
+		SD.initFolder();
+
+		// Sensor initialization
+		sensor S;
+
 		/*  Main Loop */
+		Serial.printf("KF - Begin main loop \n");
 		while (true)
 		{
 			//GE.read();
@@ -194,7 +201,7 @@ void loop() {
 			}
 
 			// Set the H matrix as if we don't have a ground contact, but if contact set true
-			KF.set_h(contact);
+			KF.set_h(false);
 
 			// Set the deterministic input vector, if thrusting is non-zero
 			if (thrusting){
@@ -205,14 +212,11 @@ void loop() {
 
 				// Average samples for a desired time in microseconds
 				while ((micros() - thrust_start) <  5000){
-					int A_P = analogRead(AP);
-					int A_N = analogRead(AN);
-					thrust_avg = thrust_avg + accel(A_P, A_N);
+					thrust_avg = thrust_avg + S.get_acceleration();
 					thrust_counter++;
 				}
 				thrust_avg = thrust_avg/thrust_counter;
-
-				// NEED TO CORRECT FOR BIAS, MISALIGNMENT, ETC. HERE
+				//Serial.println(thrust_avg);
 
 				u_n[0] = thrust_avg;
 				u_n[1] = 0;
@@ -223,11 +227,17 @@ void loop() {
 			// Run the KF
 			KF.KF_run(t1, t2, n);
 
+			// Save Data
+			state = KF.get_state();
+			//Serial.printf("%.4f - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
+			SD.sampleSTATE(t1, state);
+
+
 			// Delay depending on requirements
 			
 			// Update t1 and t2
 			t2 = t1;
-			t1 = (micros()/100000.0) - t0;
+			t1 = (millis()/1000.0) - t0;
 
 		}
 	}
