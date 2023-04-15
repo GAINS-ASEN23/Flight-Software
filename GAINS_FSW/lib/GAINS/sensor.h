@@ -34,7 +34,6 @@ class sensor{
 		float A_N = 0;
 		float V_T = 0;
 
-        float get_g();        
         float g_to_ms2(float g);
         float correct_accel(float accel); 
 
@@ -42,6 +41,7 @@ class sensor{
 
     public:
         float get_accel();
+        float get_g();        
 
         sensor(){
             analogReadResolution(ADC_RES);

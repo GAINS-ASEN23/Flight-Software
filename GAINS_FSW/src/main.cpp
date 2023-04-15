@@ -229,8 +229,8 @@ void loop() {
 
 			// Save Data
 			state = KF.get_state();
-			//Serial.printf("%.4f - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, state[0], state[1], state[2], state[3], state[4], state[5]);
-			SD.sampleSTATE(t1, state);
+			Serial.printf("%.4f - %.4f - %.4f  - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, thrust_avg, S.get_g(), state[0], state[1], state[2], state[3], state[4], state[5]);
+			SD.sampleSTATE(t1, state, thrust_avg, S.get_g());
 
 
 			// Delay depending on requirements
