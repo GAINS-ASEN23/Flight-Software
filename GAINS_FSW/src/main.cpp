@@ -16,7 +16,7 @@
 
 /*  OPERATING CONDITIONS  */
 #define DO_CW_OR_K 1 		// 0 to use CW eqns, 1 to use kinematic eqns
-#define DO_ETHERNET 1		// Perform communications over ethernet
+#define DO_ETHERNET 0		// Perform communications over ethernet
 #define DO_SD 0				// Write data to an SD card
 #define DO_KF 1				// Run the Kalman Filter
 
@@ -45,7 +45,7 @@ void loop() {
 
 	digitalWrite(LED_BUILTIN, HIGH);
 
-	// if (DO_ETHERNET){
+	if (DO_ETHERNET){
 		// Configure connection settings
 		int local[] = {21,0,0,105};
 		int localport = 8888;
@@ -60,7 +60,7 @@ void loop() {
 
 		// Send and recieve a message over UDP
 		//GE.send((char*)"GAINS FSW Initialized", GE.getRemoteIP(), GE.getRemotePort());
-	// }
+	}
 
 	if (DO_SD){
 		delay(1000);
@@ -231,7 +231,7 @@ void loop() {
 			state = KF.get_state();
 			Serial.printf("%.4f - %.8f - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, thrust_avg, state[0], state[1], state[2], state[3], state[4], state[5]);
 			SD.sampleSTATE(t1, thrust_avg, state);
-			GE.send_ground_update(t1, state, millis(), GE.getRemoteIP(), GE.getRemotePort());
+			// GE.send_ground_update(t1, state, millis(), GE.getRemoteIP(), GE.getRemotePort());
 
 
 			// Delay depending on requirements

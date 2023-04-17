@@ -39,9 +39,10 @@ class GAINSEthernet{
         GAINS_STAR_PACKET star_packet;
 
         // Assign the MAC address of this specific Teensy
-        void teensyMAC(uint8_t *mac){
-            for(uint8_t by=0; by<2; by++) mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
-            for(uint8_t by=0; by<4; by++) mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
+        void teensyMAC(){
+            // GAINSEthernet::mac = (byte*)malloc(6 * sizeof(byte));
+            for(uint8_t by=0; by<2; by++) GAINSEthernet::mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
+            for(uint8_t by=0; by<4; by++) GAINSEthernet::mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
         }
 
         // Initialize ethernet and UDP
@@ -68,9 +69,13 @@ class GAINSEthernet{
             GAINSEthernet::subnetIP = new IPAddress(subnet[0], subnet[1], subnet[2], subnet[3]);
             GAINSEthernet::localPort = localport;
             GAINSEthernet::remotePort = remoteport;
-            teensyMAC(mac);
+            teensyMAC();
             ethInit(); 
         }
+
+        // ~GAINSEthernet(){
+        //     delete[] GAINSEthernet::mac;
+        // }
 
         // Print ethernet configuration information
         void info(){
@@ -152,6 +157,7 @@ class GAINSEthernet{
         {
             //float time = systime / 1000.0;
             //Serial.printf("GE - time: %.4f\n",time);
+
             GAINS_TLM_PACKET tlm_send =  GAINS_TLM_PACKET_constructor(state[0], state[1], state[2], state[3], state[4], state[5], t1, 0, 1, 0, 0, 0, 0);
             size_t packet_size = sizeof(tlm_send);
             uint8_t buffer[packet_size];
