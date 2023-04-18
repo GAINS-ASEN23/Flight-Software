@@ -182,7 +182,7 @@ void loop() {
 
 			// Average samples for a desired time in microseconds
 			while ((micros() - thrust_start) <  5000){
-				thrust_avg = thrust_avg; //+ S.get_acceleration();
+				thrust_avg = thrust_avg; + S.get_acceleration();
 				thrust_counter++;
 			}
 			thrust_avg = thrust_avg/thrust_counter;
@@ -199,14 +199,13 @@ void loop() {
 
 		// Save, Print, and Send Data
 		state = KF.get_state();
-		Serial.printf("%.4f - %.8f - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, thrust_avg, state[0], state[1], state[2], state[3], state[4], state[5]);
-		SD.sampleSTATE(t1, thrust_avg, state);
+		Serial.printf("%.4f - %.4f - %.4f  - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", t1, thrust_avg, S.get_g(), state[0], state[1], state[2], state[3], state[4], state[5]);
+		SD.sampleSTATE(t1, state, thrust_avg, S.get_g());
 		GE.send_ground_update(t1, state, millis(), GE.getRemoteIP(), GE.getRemotePort());
 		
-		// Update t1 and t2
+		// Update t1 and t2s
 		t2 = t1;
 		t1 = (millis()/1000.0) - t0;
-
 	
 	}
 
