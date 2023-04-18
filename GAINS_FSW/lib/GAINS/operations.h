@@ -27,8 +27,5 @@ float calculate_mean_motion(float mu, float rad_attractor, float orbit_alt);
 void set_cw_ics(float x_n_n[], float alpha, float beta, float deviation, float n);
 void set_p_ic(uint8_t state_size, float P_n_n[], float sigma[]);
 
-// Sensor Helpers
-float accel(int AP, int AN);
-float temp(float V_T);
 
 #endif

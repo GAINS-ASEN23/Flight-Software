@@ -25,13 +25,13 @@
 class GAINSEthernet{
     private:
 
-        byte mac[6];
+        byte *mac = nullptr;
         IPAddress* localIP = nullptr;
         IPAddress* remoteIP = nullptr;
         IPAddress* subnetIP = nullptr;
         unsigned int localPort;
         unsigned int remotePort;
-        uint8_t packetBuffer[PACKET_MAX_SIZE];  // buffer to hold incoming packet
+        uint8_t *packetBuffer = nullptr;
         EthernetUDP UDP;
 
         headerData packet_header;
@@ -39,9 +39,10 @@ class GAINSEthernet{
         GAINS_STAR_PACKET star_packet;
 
         // Assign the MAC address of this specific Teensy
-        void teensyMAC(uint8_t *mac){
-            for(uint8_t by=0; by<2; by++) mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
-            for(uint8_t by=0; by<4; by++) mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
+        void teensyMAC(){
+            // GAINSEthernet::mac = (byte*)malloc(6 * sizeof(byte));
+            for(uint8_t by=0; by<2; by++) GAINSEthernet::mac[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
+            for(uint8_t by=0; by<4; by++) GAINSEthernet::mac[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
         }
 
         // Initialize ethernet and UDP
@@ -68,9 +69,15 @@ class GAINSEthernet{
             GAINSEthernet::subnetIP = new IPAddress(subnet[0], subnet[1], subnet[2], subnet[3]);
             GAINSEthernet::localPort = localport;
             GAINSEthernet::remotePort = remoteport;
-            teensyMAC(mac);
+            GAINSEthernet::mac = (byte*) malloc (6 * sizeof(byte));
+            GAINSEthernet::packetBuffer = (uint8_t*) malloc (PACKET_MAX_SIZE * sizeof(uint8_t));
+            teensyMAC();
             ethInit(); 
         }
+
+        // ~GAINSEthernet(){
+        //     delete[] GAINSEthernet::mac;
+        // }
 
         // Print ethernet configuration information
         void info(){
@@ -84,39 +91,46 @@ class GAINSEthernet{
         // Read a CCSDS packet from UDP
         void read(){
             int packetSize = GAINSEthernet::UDP.parsePacket();
-            if (packetSize) {
+            if (packetSize == 4){
+                // GS time recieved
+
+            }
+            else if (packetSize) {
                 IPAddress remote = GAINSEthernet::UDP.remoteIP();
                 uint16_t remotePort = GAINSEthernet::UDP.remotePort();
-                UDP.read(GAINSEthernet::packetBuffer, PACKET_MAX_SIZE);
+                UDP.read(GAINSEthernet::packetBuffer, packetSize);
 
                 // Decode the CCSDS packet 
                 GAINSEthernet::tlm_packet = read_TLM_Packet(GAINSEthernet::packetBuffer);
                 packet_header = readHeader(GAINSEthernet::tlm_packet.FullHeader.SpacePacket.Hdr);
 
-                Serial.printf("Packet from %d.%d.%d.%d:%d of size %d:  ", remote[0], remote[1], remote[2], remote[3], remotePort, packetSize);
-                char received_message[packetSize];
-                for(int i = 0; i<packetSize; i++){
-                    received_message[i] = GAINSEthernet::packetBuffer[i];
-                }
-                Serial.println(received_message);
+                // Serial.printf("Packet from %d.%d.%d.%d:%d of size %d:  ", remote[0], remote[1], remote[2], remote[3], remotePort, packetSize);
+                // char received_message[packetSize];
+                // for(int i = 0; i<packetSize; i++){
+                //     received_message[i] = GAINSEthernet::packetBuffer[i];
+                // }
+                // Serial.println(received_message);
+
+
+
             }
         }
 
         // Send a message to a specific IP and port
-        void send(uint8_t* replyBuffer, IPAddress IP, uint16_t PORT){
+        void send(uint8_t* replyBuffer, size_t size, IPAddress IP, uint16_t PORT){
             GAINSEthernet::UDP.beginPacket(IP, PORT);
-            GAINSEthernet::UDP.write((char*)replyBuffer);
+            GAINSEthernet::UDP.write(replyBuffer, size);
             if (GAINSEthernet::UDP.endPacket() == 0) {
                 Serial.println("Error Sending Message");
             }
             else {
-                Serial.printf("Packet to %d.%d.%d.%d:%d  >>  %s\n", IP[0],IP[1],IP[2],IP[3],PORT,replyBuffer);
+                //Serial.printf("Packet to %d.%d.%d.%d:%d\n", IP[0],IP[1],IP[2],IP[3],PORT);
             }
         }
 
         // Send a message to whatever device just sent you a packet
         void send_return(uint8_t* replyBuffer){
-            send(replyBuffer, GAINSEthernet::UDP.remoteIP(), GAINSEthernet::UDP.remotePort());
+            send(replyBuffer, sizeof(replyBuffer), GAINSEthernet::UDP.remoteIP(), GAINSEthernet::UDP.remotePort());
         }
 
         /*  Getters and Setters  */
@@ -127,18 +141,31 @@ class GAINSEthernet{
         // Function to get the decoded values for use in the KF
         void get_ground_update(float* ground_vector)
         {
-            ground_vector[0] = GAINSEthernet::tlm_packet.position_x;
-            ground_vector[1] = GAINSEthernet::tlm_packet.position_y;
-            ground_vector[2] = GAINSEthernet::tlm_packet.position_z;
-            ground_vector[3] = GAINSEthernet::tlm_packet.velocity_x;
-            ground_vector[4] = GAINSEthernet::tlm_packet.velocity_y;
-            ground_vector[5] = GAINSEthernet::tlm_packet.velocity_z;
+            read();
+
+            uint8_t mode = GAINSEthernet::tlm_packet.FullHeader.Sec.Mode;
+            float *ret;
+            ret[0] = GAINSEthernet::tlm_packet.FullHeader.Sec.Time;
+            ret[1] = (float) GAINSEthernet::tlm_packet.position_x;
+            ret[2] = (float) GAINSEthernet::tlm_packet.position_y;
+            ret[3] = (float) GAINSEthernet::tlm_packet.position_z;
+            ret[4] = (float) GAINSEthernet::tlm_packet.velocity_x;
+            ret[5] = (float) GAINSEthernet::tlm_packet.velocity_y;
+            ret[6] = (float) GAINSEthernet::tlm_packet.velocity_z;
         }
-        
+       
         // Function to set the return data vector for the ground
-        void set_ground_update(float* space_vector)
+        void send_ground_update(float t1, float* state, uint32_t systime, IPAddress IP, uint16_t port)
         {
-            
+            //float time = systime / 1000.0;
+            //Serial.printf("GE - time: %.4f\n",time);
+
+            GAINS_TLM_PACKET tlm_send =  GAINS_TLM_PACKET_constructor(state[0], state[1], state[2], state[3], state[4], state[5], t1, 0, 1, 0, 0, 0, 0);
+            size_t packet_size = sizeof(tlm_send);
+            uint8_t buffer[packet_size];
+            memcpy(&buffer, &tlm_send, packet_size);
+
+            send(buffer, packet_size, IP, port);
         }
 };
 
