@@ -1,6 +1,6 @@
-function [state, error] = KF_accel(M_n, U_n, x_n_n, P_n_n, R_n, dt)
+function [state, error] = KF_accel(Qa, M_n, U_n, x_n_n, P_n_n, R_n, dt, tnm1, tn, ground_data)
 %{
-    Last Edited: Jason Popich 02/28/23
+    Last Edited: Bennett Grow 3/17/23
 
     DESCRIPTION
 
@@ -10,7 +10,7 @@ function [state, error] = KF_accel(M_n, U_n, x_n_n, P_n_n, R_n, dt)
         x_n_n - Current Estimated State Vector
         P_n_n - Current Estimated State Uncertainty Matrix
         R_n - Measurement Uncertainty Matrix
-        dt - Length of time between steps [sec]
+        bool_accel - Acceleration Flag to change the H Matrix
 
     Outputs:
         state - The next time step Estimated State Vector
@@ -20,37 +20,30 @@ function [state, error] = KF_accel(M_n, U_n, x_n_n, P_n_n, R_n, dt)
     %% ---------------------------------------
     %        SET VARIABLES FOR ITERATION
     % ----------------------------------------
-    
     % Define the State Transition Matrix
     F = [1 0 0 dt 0 0; 0 1 0 0 dt 0; 0 0 1 0 0 dt; 0 0 0 1 0 0; 0 0 0 0 1 0; 0 0 0 0 0 1];
     
-    % Define the input matrix
-    B = [zeros(3); eye(3)];
-    
     % Define Control Matrix
-    G = F*B;
+    G = [(1/2)*(dt^2) 0 0; 0 (1/2)*(dt^2) 0; 0 0 (1/2)*(dt^2); dt 0 0; 0 dt 0; 0 0 dt];
 
     % Define the observation matrix
-    H = [zeros(3) eye(3)*dt];
+    if (ground_data == true)
+        H = eye(6);
+    else
+        H = zeros(6);
+    end
     
-    % Set errors
-    pos_sigma = 1;              % Position error in [m]
-    vel_sigma = 1;               % Velocity error in [m/s]
-    
-    % Define the Measurement Process Noise Matrix, Q_meas
-    Q_meas = [eye(3)*pos_sigma zeros(3); zeros(3) eye(3)*vel_sigma];
+    % Process noise covariance matrix
+    if(U_n == zeros(3,1))
+        Q = zeros(6);
 
-    % Define the Process Noise Matrix, Q
-    Q = F*Q_meas*F';
-    
+    else % Thrusting
+        Q = G*Qa*G';
+    end
+
     %% ---------------------------------------
     %           KALMAN FILTER
     % ----------------------------------------
-
-    % Time Update
-
-    % Extrapolate the state
-    x_n_p_1_n = F*x_n_n + G*U_n;
 
     % Extrapolate uncertainty
     P_n_p_1_n = F*P_n_n*F' + Q;
@@ -64,7 +57,10 @@ function [state, error] = KF_accel(M_n, U_n, x_n_n, P_n_n, R_n, dt)
     z_n = H*M_n;
 
     % Update the estimate with measurement
-    x_n_n = x_n_p_1_n + K_n*(z_n - H*x_n_p_1_n);
+    x_n_n = x_n_n + K_n*(z_n - H*x_n_n);
+
+    % Extrapolate the state
+    x_n_n = F*x_n_n + G*U_n;
 
     % Get the size of H
     [H_rows, H_cols] = size(K_n*H);
