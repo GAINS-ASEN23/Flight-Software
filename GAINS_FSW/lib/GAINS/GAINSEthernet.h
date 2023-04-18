@@ -25,13 +25,13 @@
 class GAINSEthernet{
     private:
 
-        byte mac[6];
+        byte *mac = nullptr;
         IPAddress* localIP = nullptr;
         IPAddress* remoteIP = nullptr;
         IPAddress* subnetIP = nullptr;
         unsigned int localPort;
         unsigned int remotePort;
-        uint8_t packetBuffer[PACKET_MAX_SIZE];  // buffer to hold incoming packet
+        uint8_t *packetBuffer = nullptr;
         EthernetUDP UDP;
 
         headerData packet_header;
@@ -69,6 +69,8 @@ class GAINSEthernet{
             GAINSEthernet::subnetIP = new IPAddress(subnet[0], subnet[1], subnet[2], subnet[3]);
             GAINSEthernet::localPort = localport;
             GAINSEthernet::remotePort = remoteport;
+            GAINSEthernet::mac = (byte*) malloc (6 * sizeof(byte));
+            GAINSEthernet::packetBuffer = (uint8_t*) malloc (PACKET_MAX_SIZE * sizeof(uint8_t));
             teensyMAC();
             ethInit(); 
         }
