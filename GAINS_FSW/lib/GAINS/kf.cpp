@@ -8,22 +8,20 @@ Description : This file contains the Kalman Filter (KF) function definitions
 ============================================================================
 */
 
-#include <kf.h>
+#include "kf.h"
 
 /*********************************************/
 /*     KALMAN FILTER CLASS FUNCTIONS         */
 /*********************************************/
 
 // Initialization Constructor
-KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CWorK)
+KalmanFilter::KalmanFilter(int n_x_local, int n_u_local, int n_z_local, float* x_n_n_local, float* P_n_n_local, bool CW_or_k)
 {
-    // Use CW or Kinematics
-    KalmanFilter::CW_or_K = CWorK;
-
     // Set the KF environment vars
-    KalmanFilter::n_x = n_x;
-    KalmanFilter::n_u = n_u;
-    KalmanFilter::n_z = n_z;
+    KalmanFilter::CW_or_K = CW_or_k;
+    KalmanFilter::n_x = n_x_local;
+    KalmanFilter::n_u = n_u_local;
+    KalmanFilter::n_z = n_z_local;
 
     /*    Preallocate Matricies and Vectors    */
 
@@ -31,8 +29,8 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
     KalmanFilter::x_n_p_1_n = (float*)malloc((n_x * 1) * sizeof(float));                   // Current Predicted State vector
     KalmanFilter::P_n_p_1_n = (float*)malloc((n_x * n_x) * sizeof(float));                 // Current Predicted Uncertainty Matrix
 
-    KalmanFilter::P_n_n = P_n_n;                                                            // Estimate Uncertainty Matrix (must be defined outside of this class)
-    KalmanFilter::x_n_n = x_n_n;                                                            // Estimate State vector(must be defined outside of this class)
+    KalmanFilter::P_n_n = P_n_n_local;                                                      // Estimate Uncertainty Matrix (must be defined outside of this class)
+    KalmanFilter::x_n_n = x_n_n_local;                                                      // Estimate State vector(must be defined outside of this class)
 
     // Kalman Filter Matricies
     KalmanFilter::F = (float*)malloc((n_x * n_x) * sizeof(float));                          // State Transition Matrix
@@ -45,7 +43,7 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
     KalmanFilter::GammaT = (float*)malloc((n_x * n_x) * sizeof(float));                     // Gamma Matrix Transposed (No other name??)
 
     KalmanFilter::H = (float*)malloc((n_z * n_x) * sizeof(float));                          // Observation Matrix
-    KalmanFilter::HT = (float*)malloc((n_z * n_x) * sizeof(float));                         // Transposed Observation Matrix
+    KalmanFilter::HT = (float*)malloc((n_x * n_z) * sizeof(float));                         // Transposed Observation Matrix
     eye(KalmanFilter::H, n_z);                                                              // Define the H matrix as the identity for this application
 
     KalmanFilter::Q = (float*)malloc((n_x * n_x) * sizeof(float));                          // Process Noise Matrix
@@ -66,7 +64,6 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
 
 void KalmanFilter::KF_run(float t1, float t2, float n)
 {
-
     // Update the time
     KalmanFilter::t1 = t1;
     KalmanFilter::t2 = t2;
@@ -190,16 +187,16 @@ void KalmanFilter::predict_state()
     mul(F, x_n_n, FX_n_n, KalmanFilter::n_x, KalmanFilter::n_x, 1);
 
     // G*u_n
-    mul(G, KalmanFilter::u_n, GU_n, KalmanFilter::n_x, KalmanFilter::n_x, 1);
+    mul(KalmanFilter::G, KalmanFilter::u_n, GU_n, KalmanFilter::n_x, KalmanFilter::n_u, 1);
 
     //  x_n_p_1_n
-    add(FX_n_n, GU_n, KalmanFilter::x_n_p_1_n, KalmanFilter::n_x*KalmanFilter::n_x);
+    add(FX_n_n, GU_n, KalmanFilter::x_n_p_1_n, KalmanFilter::n_x);
 }
 
 void KalmanFilter::predict_uncertainty()
 {
     /*          Equation               */
-    /* P_n_p_1_n = F * P_n_n * F^T + Q */
+    /* P_n_p_1_n = F * P_n_n * F^T + Q s*/
 
     // Declare temp vars
     float FP_n_n[KalmanFilter::n_x*KalmanFilter::n_x];
@@ -257,7 +254,7 @@ void KalmanFilter::compute_kalman_gain()
     // Invert HP_n_n_m_1HTR_n
     if(inv(HP_n_n_m_1HTR_n, KalmanFilter::n_z) == 0)
     {
-        //printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
+        // printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
     }
 
     // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
@@ -274,12 +271,10 @@ void KalmanFilter::estimate_state()
     float Z_nHX_n_n_m_1[KalmanFilter::n_z];
     float K_nZ_nHX_n_n_m_1[KalmanFilter::n_x];
 
-
     // Set the memory for the temp vars
     memset(HX_n_n_m_1, 0, KalmanFilter::n_z*sizeof(float));
     memset(Z_nHX_n_n_m_1, 0, KalmanFilter::n_z*sizeof(float));
     memset(K_nZ_nHX_n_n_m_1, 0, KalmanFilter::n_x*sizeof(float));
-
 
     // HX_n_n_m_1 = H * x_n_p_1_n
     mul(KalmanFilter::H, x_n_p_1_n, HX_n_n_m_1, KalmanFilter::n_z, KalmanFilter::n_x, 1);
@@ -369,7 +364,7 @@ void KalmanFilter::update_constant_matrices(float n)
     tran(KalmanFilter::GammaT, KalmanFilter::n_x, KalmanFilter::n_x);
 
     // Update the G Matrix
-    mul(KalmanFilter::Gamma, KalmanFilter::B, KalmanFilter::G, KalmanFilter::n_x, KalmanFilter::n_x, KalmanFilter::n_z);
+    mul(KalmanFilter::Gamma, KalmanFilter::B, KalmanFilter::G, KalmanFilter::n_x, KalmanFilter::n_x, KalmanFilter::n_u);
 
     // Update the process noise covariance matrix
     compute_process_noise_covariance_matrix();
@@ -381,9 +376,8 @@ void KalmanFilter::compute_state_transition_matrix(float n)
     float dt = KalmanFilter::t2 - KalmanFilter::t1;
 
     /*  Populate the F matrix    */
-
-    if (CW_or_K == 0){  // Use CW equations
-
+    if (KalmanFilter::CW_or_K == 0)
+    {
         // First Row
         KalmanFilter::F[0] = (4 - (3*cos(dt*n)));
         KalmanFilter::F[1] = 0;
@@ -407,7 +401,7 @@ void KalmanFilter::compute_state_transition_matrix(float n)
         KalmanFilter::F[15] = 0;
         KalmanFilter::F[16] = 0;
         KalmanFilter::F[17] = (1/n)*sin(dt*n);
-        
+
         // Fourth Row
         KalmanFilter::F[18] = 3*n*sin(dt*n);
         KalmanFilter::F[19] = 0;
@@ -430,11 +424,10 @@ void KalmanFilter::compute_state_transition_matrix(float n)
         KalmanFilter::F[32] = -n*sin(dt*n);
         KalmanFilter::F[33] = 0;
         KalmanFilter::F[34] = 0;
-        KalmanFilter::F[35] = cos(dt*n);    
-
+        KalmanFilter::F[35] = cos(dt*n);
     }
-
-    else { // Use kinematic equations
+    else 
+    { // Use kinematic equations
 
         // First Row
         KalmanFilter::F[0] = 1;
@@ -494,8 +487,8 @@ void KalmanFilter::compute_gamma_matrix(float n)
 
     /*  Populate the Gamma Matrix   */
 
-    if (CW_or_K == 0){  // Use CW equations
-
+    if (KalmanFilter::CW_or_K == 0)
+    {
         // First Row
         KalmanFilter::Gamma[0] = (4*dt) - (3/n)*(sin(dt*n));
         KalmanFilter::Gamma[1] = 0;
@@ -543,16 +536,14 @@ void KalmanFilter::compute_gamma_matrix(float n)
         KalmanFilter::Gamma[33] = 0;
         KalmanFilter::Gamma[34] = 0;
         KalmanFilter::Gamma[35] = (1/n)*sin(dt*n);
-
     }
-
-    else { // Use kinematic equations
-
+    else // Kinematics Gamma
+    {
         // First Row
         KalmanFilter::Gamma[0] = dt;
         KalmanFilter::Gamma[1] = 0;
         KalmanFilter::Gamma[2] = 0;
-        KalmanFilter::Gamma[3] = pow(dt,2)/2;
+        KalmanFilter::Gamma[3] = pow(dt,2)/2.0;
         KalmanFilter::Gamma[4] = 0;
         KalmanFilter::Gamma[5] = 0;
 
@@ -561,9 +552,8 @@ void KalmanFilter::compute_gamma_matrix(float n)
         KalmanFilter::Gamma[7] = dt;
         KalmanFilter::Gamma[8] = 0;
         KalmanFilter::Gamma[9] = 0;
-        KalmanFilter::Gamma[10] = pow(dt,2)/2;
+        KalmanFilter::Gamma[10] = pow(dt,2)/2.0;
         KalmanFilter::Gamma[11] = 0;
-
 
         // Third Row
         KalmanFilter::Gamma[12] = 0;
@@ -571,7 +561,7 @@ void KalmanFilter::compute_gamma_matrix(float n)
         KalmanFilter::Gamma[14] = dt;
         KalmanFilter::Gamma[15] = 0;
         KalmanFilter::Gamma[16] = 0;
-        KalmanFilter::Gamma[17] = pow(dt,2)/2;
+        KalmanFilter::Gamma[17] = pow(dt,2)/2.0;
 
         // Fourth Row
         KalmanFilter::Gamma[18] = 0;
@@ -596,7 +586,6 @@ void KalmanFilter::compute_gamma_matrix(float n)
         KalmanFilter::Gamma[33] = 0;
         KalmanFilter::Gamma[34] = 0;
         KalmanFilter::Gamma[35] = dt;
-
     }
 }
 

@@ -13,6 +13,7 @@ Description : This file is the main include for the main source file
 
 #include <stdlib.h>						    // Standard library
 #include <stdint.h>						    // For uint8_t, uint16_t and uint16_t
+#include <iostream>
 extern "C" {
     #include "CControl/Headers/Functions.h"         // Matrix Math Library
 }

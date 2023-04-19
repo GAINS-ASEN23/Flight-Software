@@ -27,7 +27,7 @@ class KalmanFilter
     KalmanFilter(){};
 
     // Initialization Constructor
-    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k);
+    KalmanFilter(int n_x_local, int n_u_local, int n_z_local, float* x_n_n_local, float* P_n_n_local, bool CW_or_k);
 
     // Default Destructor
     ~KalmanFilter()
@@ -56,14 +56,8 @@ class KalmanFilter
     };
 
     /*  PUBLIC KF FUNCTIONS  */
-
+    
     void KF_run(float t1, float t2, float n);
-    float* get_state(){
-        return x_n_n;
-    }
-    float* get_uncertainty(){
-        return P_n_n;
-    }
 
     void set_r_n(float sigma[]);
     void set_det_input_vector(float* u_n);
@@ -71,6 +65,17 @@ class KalmanFilter
     void set_q_a(float sigma[]);
     void set_h(bool ground_contact);
     void set_b();
+
+    // FOR TESTING
+    float test_var {0};
+    void set_var(float var)
+    {
+        KalmanFilter::test_var = var;
+    }
+    float print_var()
+    {
+        return KalmanFilter::test_var;
+    }
 
     private:
 

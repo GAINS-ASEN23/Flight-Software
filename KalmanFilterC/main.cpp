@@ -72,7 +72,7 @@ int main()
     set_p_ic(n_x, P_n_n, sigma_p_n_n);
 
     // Create the KF object
-    KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n);
+    KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n, 1);
 
     /*  Set the measurement covariance matrix   */
     float sigma_position_ground = 1000;
@@ -98,8 +98,8 @@ int main()
     /*********************************************/ 
 
     // LOOP
-    // while(true)
-    // {
+    while(true)
+    {
             // Set the measurement vector, if ground contact is non-zero
             z_n[0] = 0;
             z_n[1] = 0;
@@ -123,12 +123,13 @@ int main()
 
             // Run the KF
             KF.KF_run(t1, t2, n);
-            print(x_n_n, 6, 1);
+            //print(x_n_n, 6, 1);
+            std::cout << x_n_n[0] << " " << x_n_n[1] << " " << x_n_n[2] << " " << x_n_n[3] << " " << x_n_n[4] << " " << x_n_n[5] << " " << std::endl;
 
             // Delay depending on requirements
             
             // Update t1 and t2
-    // }
+    }
 
     /*********************************************/
 	end = clock();
