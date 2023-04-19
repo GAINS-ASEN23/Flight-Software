@@ -98,8 +98,8 @@ int main()
     /*********************************************/ 
 
     // LOOP
-    // while(true)
-    // {
+    while(true)
+    {
             // Set the measurement vector, if ground contact is non-zero
             z_n[0] = 0;
             z_n[1] = 0;
@@ -123,12 +123,13 @@ int main()
 
             // Run the KF
             KF.KF_run(t1, t2, n);
-            print(x_n_n, 6, 1);
+            //print(x_n_n, 6, 1);
+            std::cout << x_n_n[0] << " " << x_n_n[1] << " " << x_n_n[2] << " " << x_n_n[3] << " " << x_n_n[4] << " " << x_n_n[5] << " " << std::endl;
 
             // Delay depending on requirements
             
             // Update t1 and t2
-    // }
+    }
 
     /*********************************************/
 	end = clock();
