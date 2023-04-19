@@ -27,15 +27,18 @@ ref = g_conv.*cosd(ang);   %[g's]
 p = polyfit(ref,accels,1);
 x = linspace(-1,1);
 y = p(1)*x + p(2);
-scatter(ref,accels,400, '.k')
+plot(ref,accels,'k')
 hold on
 plot(x,y,'r',"LineWidth", 2)
 text(-0.5,0.4,strcat("Bias: ",num2str(p(2))))
 text(-0.5,0.5,strcat("Scale Factor: ",num2str(p(1))))
+
+plot(ref,accels/p(1)-p(2))
+plot(linspace(-1,1,9), linspace(-1,1,9));
 xlabel("Truth [g]")
 ylabel("Measured [g]")
 title("SDI 1521 Calibration: Measured vs. Truth Accelerations")
-legend("Data", "Best Fit")
+legend("Data", "Best Fit", "Calibrated", "True")
 %xlim([-0.02,0.02])
 
 grid on 
@@ -45,7 +48,7 @@ grid minor
 BRver = accels/p(1) - p(2);
 bennettsK = 1.0876;
 Bennettver = accels/bennettsK - p(2);
-disp(abs((ref - BRver)))
+disp(abs((ref - BRver))) 
 disp(abs((ref - Bennettver)))
 diff = ref-BRver;
 bennett =bennettsK*x + p(2);
@@ -53,6 +56,7 @@ bennett =bennettsK*x + p(2);
 
 gRange = y(abs(x-y) <= 0.02);
 
+error = (BRver - ref)./ref.*100
 
 %% Determine INS g range
 ref(4:6)
@@ -69,8 +73,10 @@ xline(0.02,"r--","LineWidth", 2)
 xline(-0.02,"r--","LineWidth", 2)
 yline((0.02-line(2))/line(1), 'r--',"LineWidth", 2)
 yline(-(0.02-line(2))/line(1), 'r--',"LineWidth", 2)
-xline()
 xlim([-0.025, 0.025])
 grid on
 grid minor
 xlabel("Calibration Percentage")
+ylabel("Acceleration [g]")
+title("Acceleration vs Bias Calibration Percentage")
+

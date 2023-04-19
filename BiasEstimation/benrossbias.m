@@ -4,9 +4,11 @@ close all
 
 %% Measured Data
 accels = zeros(1,9);
+stds = zeros(1,9);
 for i = 1:9
     d = readmatrix(strcat('GAINS 8 Pos Test/GAINS000', string(i), '/accel.csv'));
     accels(i) = mean(d(:,2));
+    stds(i) = std(d(:,2));
 end
 
 %% Truth Data
@@ -27,15 +29,19 @@ ref = g_conv.*cosd(ang);   %[g's]
 p = polyfit(ref,accels,1);
 x = linspace(-1,1);
 y = p(1)*x + p(2);
-scatter(ref,accels,400, '.k')
+scatter(ref,accels, 20,'k')
 hold on
-plot(x,y,'r',"LineWidth", 2)
+% plot(x,y,'r',"LineWidth", 2)
 text(-0.5,0.4,strcat("Bias: ",num2str(p(2))))
 text(-0.5,0.5,strcat("Scale Factor: ",num2str(p(1))))
-xlabel("Truth [g]")
-ylabel("Measured [g]")
-title("SDI 1521 Calibration: Measured vs. Truth Accelerations")
-legend("Data", "Best Fit")
+
+calibrated = accels/p(1)-p(2);
+plot(ref,calibrated, 'LineWidth', 2)
+plot(ref, ref, 'LineWidth', 2);
+xlabel("Truth [g]", 'FontSize', 22)
+ylabel("Measured [g]", 'FontSize', 22)
+title("SDI 1521 Calibration: Measured vs. Truth Accelerations", 'FontSize', 22)
+legend("Measurements", "Calibrated Measurements", "Ideal Calibration", 'FontSize', 13)
 %xlim([-0.02,0.02])
 
 grid on 
@@ -45,7 +51,7 @@ grid minor
 BRver = accels/p(1) - p(2);
 bennettsK = 1.0876;
 Bennettver = accels/bennettsK - p(2);
-disp(abs((ref - BRver)))
+disp(abs((ref - BRver))) 
 disp(abs((ref - Bennettver)))
 diff = ref-BRver;
 bennett =bennettsK*x + p(2);
@@ -77,3 +83,10 @@ xlabel("Calibration Percentage")
 ylabel("Acceleration [g]")
 title("Acceleration vs Bias Calibration Percentage")
 
+%% Plot Error
+figure
+error = ref - BRver;
+plot(ref, error);
+xlabel("Actual Acceleration [g]")
+ylabel("Error")
+title("Error between Measured and Actual")
