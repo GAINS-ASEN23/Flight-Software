@@ -27,7 +27,7 @@ class KalmanFilter
     KalmanFilter(){};
 
     // Initialization Constructor
-    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k);
+    KalmanFilter(int n_x_local, int n_u_local, int n_z_local, float* x_n_n_local, float* P_n_n_local, bool CW_or_k);
 
     // Default Destructor
     ~KalmanFilter()

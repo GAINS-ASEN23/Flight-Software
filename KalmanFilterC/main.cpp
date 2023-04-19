@@ -72,7 +72,7 @@ int main()
     set_p_ic(n_x, P_n_n, sigma_p_n_n);
 
     // Create the KF object
-    KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n);
+    KalmanFilter KF(n_x, n_u, n_z, x_n_n, P_n_n, 1);
 
     /*  Set the measurement covariance matrix   */
     float sigma_position_ground = 1000;

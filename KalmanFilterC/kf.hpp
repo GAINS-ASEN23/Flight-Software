@@ -27,7 +27,7 @@ class KalmanFilter
     KalmanFilter(){};
 
     // Initialization Constructor
-    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n);
+    KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k);
 
     // Default Destructor
     ~KalmanFilter()
@@ -68,9 +68,23 @@ class KalmanFilter
     void set_h(bool ground_contact);
     void set_b();
 
+    // FOR TESTING
+    float test_var {0};
+    void set_var(float var)
+    {
+        KalmanFilter::test_var = var;
+    }
+    float print_var()
+    {
+        return KalmanFilter::test_var;
+    }
+
     private:
 
     /*  PRIVATE VARIABLES   */
+
+    // Set 0 for CW, 1 for Kinematics
+    bool CW_or_K = 0; 
 
     float t1 = 0;                               // Sample Time begin
     float t2 = 0;                               // Sample Time end
