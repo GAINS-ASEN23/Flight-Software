@@ -15,7 +15,7 @@
 #include <sensor.h>
 
 /*  OPERATING CONDITIONS  */
-#define DO_CW_OR_K 0		// 0 to use CW eqns, 1 to use kinematic eqns
+#define DO_CW_OR_K 1		// 0 to use CW eqns, 1 to use kinematic eqns
 
 void setup() {
 
@@ -67,6 +67,8 @@ void loop() {
 	bool contact = false;					// Are we in a contact?
 	bool thrusting = true;					// Are we thrusting?
 
+	float n = 0;							// Mean Motion of Orbit (For CW equations)
+
     float t1 = 0;                           // Sample Time begin
     float t2 = 0;                        	// Sample Time end
 
@@ -98,17 +100,21 @@ void loop() {
     float orbit_alt = 50000;                // Orbit radius [m]
 
     // Set the mean motion for CW equations
-    float n = calculate_mean_motion(mu_moon, rad_moon, orbit_alt);
+    n = calculate_mean_motion(mu_moon, rad_moon, orbit_alt);
 
     /*    Set the initial orbit initial conditions    */
 
     float alpha = 0;                    // The Phase Angle Alpha [deg]
     float beta = 0;                     // The Phase Angle Beta [deg]
-    float deviation = 50000;            // The deviation in position from the chief satellite [m]
+	float deviation = 0;            // The deviation in position from the chief satellite [m]
+	if (DO_CW_OR_K == 0)
+	{
+		deviation = 50000;            // The deviation in position from the chief satellite [m]
+	}
 
     set_cw_ics(x_n_n, alpha, beta, deviation, n);
 
-    /*    Set the initial uncertainty matrix    */
+	/*    Set the initial uncertainty matrix    */
 
     float sigma_position = 1000;        // The error in the position x,y,z [m]
     float sigma_velocity = 0.1;         // The error in the velocity x,y,z [m/s]
@@ -150,8 +156,6 @@ void loop() {
 	// Get the initial time past delay
 	float t0 = millis()/1000.0;
 
-	int i = 0;
-
     // LOOP
     while(true)
     {
@@ -186,7 +190,7 @@ void loop() {
 		}
 
         // Set the deterministic input vector, if thrusting is non-zero
-		if (thrusting == true && i < 200)
+		if (thrusting == true)
 		{
 			// Reset variables for this timestep of thrusting
 			thrust_start = micros();
@@ -203,7 +207,6 @@ void loop() {
 			u_n[0] = thrust_avg;
 			u_n[1] = 0;
 			u_n[2] = 0;
-			i++;
 		}
 		else
 		{

@@ -376,54 +376,108 @@ void KalmanFilter::compute_state_transition_matrix(float n)
     float dt = KalmanFilter::t2 - KalmanFilter::t1;
 
     /*  Populate the F matrix    */
+    if (KalmanFilter::CW_or_K == 0)
+    {
+        // First Row
+        KalmanFilter::F[0] = (4 - (3*cos(dt*n)));
+        KalmanFilter::F[1] = 0;
+        KalmanFilter::F[2] = 0;
+        KalmanFilter::F[3] = (1/n)*sin(dt*n);
+        KalmanFilter::F[4] = (-2/n)*(cos(dt*n) - 1);
+        KalmanFilter::F[5] = 0;
 
-    // First Row
-    KalmanFilter::F[0] = (4 - (3*cos(dt*n)));
-    KalmanFilter::F[1] = 0;
-    KalmanFilter::F[2] = 0;
-    KalmanFilter::F[3] = (1/n)*sin(dt*n);
-    KalmanFilter::F[4] = (-2/n)*(cos(dt*n) - 1);
-    KalmanFilter::F[5] = 0;
+        // Second Row
+        KalmanFilter::F[6] = 6*sin(dt*n) - (6*dt*n);
+        KalmanFilter::F[7] = 1;
+        KalmanFilter::F[8] = 0;
+        KalmanFilter::F[9] = (2/n)*(cos(dt*n) - 1);
+        KalmanFilter::F[10] = (1/n)*(4*sin(dt*n) - (3*dt*n));
+        KalmanFilter::F[11] = 0;
 
-    // Second Row
-    KalmanFilter::F[6] = 6*sin(dt*n) - (6*dt*n);
-    KalmanFilter::F[7] = 1;
-    KalmanFilter::F[8] = 0;
-    KalmanFilter::F[9] = (2/n)*(cos(dt*n) - 1);
-    KalmanFilter::F[10] = (1/n)*(4*sin(dt*n) - (3*dt*n));
-    KalmanFilter::F[11] = 0;
+        // Third Row
+        KalmanFilter::F[12] = 0;
+        KalmanFilter::F[13] = 0;
+        KalmanFilter::F[14] = cos(dt*n);
+        KalmanFilter::F[15] = 0;
+        KalmanFilter::F[16] = 0;
+        KalmanFilter::F[17] = (1/n)*sin(dt*n);
 
-    // Third Row
-    KalmanFilter::F[12] = 0;
-    KalmanFilter::F[13] = 0;
-    KalmanFilter::F[14] = cos(dt*n);
-    KalmanFilter::F[15] = 0;
-    KalmanFilter::F[16] = 0;
-    KalmanFilter::F[17] = (1/n)*sin(dt*n);
-    
-    // Fourth Row
-    KalmanFilter::F[18] = 3*n*sin(dt*n);
-    KalmanFilter::F[19] = 0;
-    KalmanFilter::F[20] = 0;
-    KalmanFilter::F[21] = cos(dt*n);
-    KalmanFilter::F[22] = 2*sin(dt*n);
-    KalmanFilter::F[23] = 0;
+        // Fourth Row
+        KalmanFilter::F[18] = 3*n*sin(dt*n);
+        KalmanFilter::F[19] = 0;
+        KalmanFilter::F[20] = 0;
+        KalmanFilter::F[21] = cos(dt*n);
+        KalmanFilter::F[22] = 2*sin(dt*n);
+        KalmanFilter::F[23] = 0;
 
-    // Fifth Row
-    KalmanFilter::F[24] = 6*n*(cos(dt*n) - 1);
-    KalmanFilter::F[25] = 0;
-    KalmanFilter::F[26] = 0;
-    KalmanFilter::F[27] = -2*sin(dt*n);
-    KalmanFilter::F[28] = 4*cos(dt*n) - 3;
-    KalmanFilter::F[29] = 0;
+        // Fifth Row
+        KalmanFilter::F[24] = 6*n*(cos(dt*n) - 1);
+        KalmanFilter::F[25] = 0;
+        KalmanFilter::F[26] = 0;
+        KalmanFilter::F[27] = -2*sin(dt*n);
+        KalmanFilter::F[28] = 4*cos(dt*n) - 3;
+        KalmanFilter::F[29] = 0;
 
-    // Sixth Row
-    KalmanFilter::F[30] = 0;
-    KalmanFilter::F[31] = 0;
-    KalmanFilter::F[32] = -n*sin(dt*n);
-    KalmanFilter::F[33] = 0;
-    KalmanFilter::F[34] = 0;
-    KalmanFilter::F[35] = cos(dt*n);
+        // Sixth Row
+        KalmanFilter::F[30] = 0;
+        KalmanFilter::F[31] = 0;
+        KalmanFilter::F[32] = -n*sin(dt*n);
+        KalmanFilter::F[33] = 0;
+        KalmanFilter::F[34] = 0;
+        KalmanFilter::F[35] = cos(dt*n);
+    }
+    else 
+    { // Use kinematic equations
+
+        // First Row
+        KalmanFilter::F[0] = 1;
+        KalmanFilter::F[1] = 0;
+        KalmanFilter::F[2] = 0;
+        KalmanFilter::F[3] = dt;
+        KalmanFilter::F[4] = 0;
+        KalmanFilter::F[5] = 0;
+
+        // Second Row
+        KalmanFilter::F[6] = 0;
+        KalmanFilter::F[7] = 1;
+        KalmanFilter::F[8] = 0;
+        KalmanFilter::F[9] = 0;
+        KalmanFilter::F[10] = dt;
+        KalmanFilter::F[11] = 0;
+
+        // Third Row
+        KalmanFilter::F[12] = 0;
+        KalmanFilter::F[13] = 0;
+        KalmanFilter::F[14] = 1;
+        KalmanFilter::F[15] = 0;
+        KalmanFilter::F[16] = 0;
+        KalmanFilter::F[17] = dt;
+
+        // Fourth Row
+        KalmanFilter::F[18] = 0;
+        KalmanFilter::F[19] = 0;
+        KalmanFilter::F[20] = 0;
+        KalmanFilter::F[21] = 1;
+        KalmanFilter::F[22] = 0;
+        KalmanFilter::F[23] = 0;
+
+        // Fifth Row
+        KalmanFilter::F[24] = 0;
+        KalmanFilter::F[25] = 0;
+        KalmanFilter::F[26] = 0;
+        KalmanFilter::F[27] = 0;
+        KalmanFilter::F[28] = 1;
+        KalmanFilter::F[29] = 0;
+
+        // Sixth Row
+        KalmanFilter::F[30] = 0;
+        KalmanFilter::F[31] = 0;
+        KalmanFilter::F[32] = 0;
+        KalmanFilter::F[33] = 0;
+        KalmanFilter::F[34] = 0;
+        KalmanFilter::F[35] = 1;
+
+    }
 }
 
 void KalmanFilter::compute_gamma_matrix(float n)
@@ -433,53 +487,106 @@ void KalmanFilter::compute_gamma_matrix(float n)
 
     /*  Populate the Gamma Matrix   */
 
-    // First Row
-    KalmanFilter::Gamma[0] = (4*dt) - (3/n)*(sin(dt*n));
-    KalmanFilter::Gamma[1] = 0;
-    KalmanFilter::Gamma[2] = 0;
-    KalmanFilter::Gamma[3] = (2/(pow(n,2)))*pow(sin((dt*n)/2),2);
-    KalmanFilter::Gamma[4] = (-1/pow(n,2))*((2*sin(dt*n)) - (2*dt*n));
-    KalmanFilter::Gamma[5] = 0;
+    if (KalmanFilter::CW_or_K == 0)
+    {
+        // First Row
+        KalmanFilter::Gamma[0] = (4*dt) - (3/n)*(sin(dt*n));
+        KalmanFilter::Gamma[1] = 0;
+        KalmanFilter::Gamma[2] = 0;
+        KalmanFilter::Gamma[3] = (2/(pow(n,2)))*pow(sin((dt*n)/2),2);
+        KalmanFilter::Gamma[4] = (-1/pow(n,2))*((2*sin(dt*n)) - (2*dt*n));
+        KalmanFilter::Gamma[5] = 0;
 
-    // Second Row
-    KalmanFilter::Gamma[6] = ((12/n)*pow(sin((dt*n)/2),2)) - (3*n*pow(t1,2)) - (3*n*pow(t2,2)) + (6*n*t1*t2);
-    KalmanFilter::Gamma[7] = dt;
-    KalmanFilter::Gamma[8] = 0;
-    KalmanFilter::Gamma[9] = (1/pow(n,2))*(2*sin(dt*n) - 2*dt*n);
-    KalmanFilter::Gamma[10] = ((8/pow(n,2))*pow(sin((dt*n)/2),2)) + (3*t1*t2) - ((3/2)*pow(t1,2)) - ((3/2)*pow(t2,2));
-    KalmanFilter::Gamma[11] = 0;
+        // Second Row
+        KalmanFilter::Gamma[6] = ((12/n)*pow(sin((dt*n)/2),2)) - (3*n*pow(t1,2)) - (3*n*pow(t2,2)) + (6*n*t1*t2);
+        KalmanFilter::Gamma[7] = dt;
+        KalmanFilter::Gamma[8] = 0;
+        KalmanFilter::Gamma[9] = (1/pow(n,2))*(2*sin(dt*n) - 2*dt*n);
+        KalmanFilter::Gamma[10] = ((8/pow(n,2))*pow(sin((dt*n)/2),2)) + (3*t1*t2) - ((3/2)*pow(t1,2)) - ((3/2)*pow(t2,2));
+        KalmanFilter::Gamma[11] = 0;
 
-    // Third Row
-    KalmanFilter::Gamma[12] = 0;
-    KalmanFilter::Gamma[13] = 0;
-    KalmanFilter::Gamma[14] = (1/n)*sin(dt*n);
-    KalmanFilter::Gamma[15] = 0;
-    KalmanFilter::Gamma[16] = 0;
-    KalmanFilter::Gamma[17] = (2/pow(n,2))*pow(sin((dt*n)/2),2);
+        // Third Row
+        KalmanFilter::Gamma[12] = 0;
+        KalmanFilter::Gamma[13] = 0;
+        KalmanFilter::Gamma[14] = (1/n)*sin(dt*n);
+        KalmanFilter::Gamma[15] = 0;
+        KalmanFilter::Gamma[16] = 0;
+        KalmanFilter::Gamma[17] = (2/pow(n,2))*pow(sin((dt*n)/2),2);
 
-    // Fourth Row
-    KalmanFilter::Gamma[18] = 6*pow(sin((dt*n)/2),2);
-    KalmanFilter::Gamma[19] = 0;
-    KalmanFilter::Gamma[20] = 0;
-    KalmanFilter::Gamma[21] = (1/n)*sin(dt*n);
-    KalmanFilter::Gamma[22] = (4/n)*pow(sin((dt*n)/2),2);
-    KalmanFilter::Gamma[23] = 0;
+        // Fourth Row
+        KalmanFilter::Gamma[18] = 6*pow(sin((dt*n)/2),2);
+        KalmanFilter::Gamma[19] = 0;
+        KalmanFilter::Gamma[20] = 0;
+        KalmanFilter::Gamma[21] = (1/n)*sin(dt*n);
+        KalmanFilter::Gamma[22] = (4/n)*pow(sin((dt*n)/2),2);
+        KalmanFilter::Gamma[23] = 0;
 
-    // Fifth Row
-    KalmanFilter::Gamma[24] = (6*sin(dt*n)) - (6*dt*n);
-    KalmanFilter::Gamma[25] = 0;
-    KalmanFilter::Gamma[26] = 0;
-    KalmanFilter::Gamma[27] = (-4/n)*pow((dt*n)/2, 2);
-    KalmanFilter::Gamma[28] = (4/n)*sin(dt*n) - (3*dt);
-    KalmanFilter::Gamma[29] = 0;
+        // Fifth Row
+        KalmanFilter::Gamma[24] = (6*sin(dt*n)) - (6*dt*n);
+        KalmanFilter::Gamma[25] = 0;
+        KalmanFilter::Gamma[26] = 0;
+        KalmanFilter::Gamma[27] = (-4/n)*pow((dt*n)/2, 2);
+        KalmanFilter::Gamma[28] = (4/n)*sin(dt*n) - (3*dt);
+        KalmanFilter::Gamma[29] = 0;
 
-    // Sixth Row
-    KalmanFilter::Gamma[30] = 0;
-    KalmanFilter::Gamma[31] = 0;
-    KalmanFilter::Gamma[32] = cos(dt*n) - 1;
-    KalmanFilter::Gamma[33] = 0;
-    KalmanFilter::Gamma[34] = 0;
-    KalmanFilter::Gamma[35] = (1/n)*sin(dt*n);
+        // Sixth Row
+        KalmanFilter::Gamma[30] = 0;
+        KalmanFilter::Gamma[31] = 0;
+        KalmanFilter::Gamma[32] = cos(dt*n) - 1;
+        KalmanFilter::Gamma[33] = 0;
+        KalmanFilter::Gamma[34] = 0;
+        KalmanFilter::Gamma[35] = (1/n)*sin(dt*n);
+    }
+    else // Kinematics Gamma
+    {
+        // First Row
+        KalmanFilter::Gamma[0] = dt;
+        KalmanFilter::Gamma[1] = 0;
+        KalmanFilter::Gamma[2] = 0;
+        KalmanFilter::Gamma[3] = pow(dt,2)/2.0;
+        KalmanFilter::Gamma[4] = 0;
+        KalmanFilter::Gamma[5] = 0;
+
+        // Second Row
+        KalmanFilter::Gamma[6] = 0;
+        KalmanFilter::Gamma[7] = dt;
+        KalmanFilter::Gamma[8] = 0;
+        KalmanFilter::Gamma[9] = 0;
+        KalmanFilter::Gamma[10] = pow(dt,2)/2.0;
+        KalmanFilter::Gamma[11] = 0;
+
+        // Third Row
+        KalmanFilter::Gamma[12] = 0;
+        KalmanFilter::Gamma[13] = 0;
+        KalmanFilter::Gamma[14] = dt;
+        KalmanFilter::Gamma[15] = 0;
+        KalmanFilter::Gamma[16] = 0;
+        KalmanFilter::Gamma[17] = pow(dt,2)/2.0;
+
+        // Fourth Row
+        KalmanFilter::Gamma[18] = 0;
+        KalmanFilter::Gamma[19] = 0;
+        KalmanFilter::Gamma[20] = 0;
+        KalmanFilter::Gamma[21] = dt;
+        KalmanFilter::Gamma[22] = 0;
+        KalmanFilter::Gamma[23] = 0;
+
+        // Fifth Row
+        KalmanFilter::Gamma[24] = 0;
+        KalmanFilter::Gamma[25] = 0;
+        KalmanFilter::Gamma[26] = 0;
+        KalmanFilter::Gamma[27] = 0;
+        KalmanFilter::Gamma[28] = dt;
+        KalmanFilter::Gamma[29] = 0;
+
+        // Sixth Row
+        KalmanFilter::Gamma[30] = 0;
+        KalmanFilter::Gamma[31] = 0;
+        KalmanFilter::Gamma[32] = 0;
+        KalmanFilter::Gamma[33] = 0;
+        KalmanFilter::Gamma[34] = 0;
+        KalmanFilter::Gamma[35] = dt;
+    }
 }
 
 void KalmanFilter::compute_process_noise_covariance_matrix()
