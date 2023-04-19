@@ -190,7 +190,7 @@ void KalmanFilter::predict_state()
     mul(G, KalmanFilter::u_n, GU_n, KalmanFilter::n_x, KalmanFilter::n_u, 1);
 
     //  x_n_p_1_n
-    add(FX_n_n, GU_n, KalmanFilter::x_n_p_1_n, KalmanFilter::n_x*KalmanFilter::n_x);
+    add(FX_n_n, GU_n, KalmanFilter::x_n_p_1_n, KalmanFilter::n_x);
 }
 
 void KalmanFilter::predict_uncertainty()
@@ -254,7 +254,7 @@ void KalmanFilter::compute_kalman_gain()
     // Invert HP_n_n_m_1HTR_n
     if(inv(HP_n_n_m_1HTR_n, KalmanFilter::n_z) == 0)
     {
-        printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
+        // printf("Error Inverting HP_n_n_m_1HTR_n in KF Eqn 3 \n");
     }
 
     // K_n = P_n_n_m_1HT * HP_n_n_m_1HTR_n
