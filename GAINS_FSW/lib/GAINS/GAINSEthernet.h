@@ -89,31 +89,21 @@ class GAINSEthernet{
         }
 
         // Read a CCSDS packet from UDP
-        void read(){
+        bool read(){
             int packetSize = GAINSEthernet::UDP.parsePacket();
-            if (packetSize == 4){
-                // GS time recieved
-
-            }
-            else if (packetSize) {
+            if (packetSize != 0) {
                 IPAddress remote = GAINSEthernet::UDP.remoteIP();
                 uint16_t remotePort = GAINSEthernet::UDP.remotePort();
                 UDP.read(GAINSEthernet::packetBuffer, packetSize);
 
                 // Decode the CCSDS packet 
                 GAINSEthernet::tlm_packet = read_TLM_Packet(GAINSEthernet::packetBuffer);
-                packet_header = readHeader(GAINSEthernet::tlm_packet.FullHeader.SpacePacket.Hdr);
+                // packet_header = readHeader(GAINSEthernet::tlm_packet.FullHeader.SpacePacket.Hdr);
 
-                // Serial.printf("Packet from %d.%d.%d.%d:%d of size %d:  ", remote[0], remote[1], remote[2], remote[3], remotePort, packetSize);
-                // char received_message[packetSize];
-                // for(int i = 0; i<packetSize; i++){
-                //     received_message[i] = GAINSEthernet::packetBuffer[i];
-                // }
-                // Serial.println(received_message);
-
-
-
+                return true;
             }
+
+            return false;
         }
 
         // Send a message to a specific IP and port
@@ -139,19 +129,16 @@ class GAINSEthernet{
         int getRemotePort(){ return GAINSEthernet::remotePort; }
 
         // Function to get the decoded values for use in the KF
-        void get_ground_update(float* ground_vector)
+        void get_ground_update(float* z_n)
         {
-            read();
-
-            uint8_t mode = GAINSEthernet::tlm_packet.FullHeader.Sec.Mode;
-            float *ret;
-            ret[0] = GAINSEthernet::tlm_packet.FullHeader.Sec.Time;
-            ret[1] = (float) GAINSEthernet::tlm_packet.position_x;
-            ret[2] = (float) GAINSEthernet::tlm_packet.position_y;
-            ret[3] = (float) GAINSEthernet::tlm_packet.position_z;
-            ret[4] = (float) GAINSEthernet::tlm_packet.velocity_x;
-            ret[5] = (float) GAINSEthernet::tlm_packet.velocity_y;
-            ret[6] = (float) GAINSEthernet::tlm_packet.velocity_z;
+            // uint8_t mode = GAINSEthernet::tlm_packet.FullHeader.Sec.Mode;
+            // z_n[0] = GAINSEthernet::tlm_packet.FullHeader.Sec.Time;
+            z_n[0] = (float) GAINSEthernet::tlm_packet.position_x;
+            z_n[1] = (float) GAINSEthernet::tlm_packet.position_y;
+            z_n[2] = (float) GAINSEthernet::tlm_packet.position_z;
+            z_n[3] = (float) GAINSEthernet::tlm_packet.velocity_x;
+            z_n[4] = (float) GAINSEthernet::tlm_packet.velocity_y;
+            z_n[5] = (float) GAINSEthernet::tlm_packet.velocity_z;
         }
        
         // Function to set the return data vector for the ground

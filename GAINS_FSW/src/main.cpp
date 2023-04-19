@@ -41,17 +41,16 @@ void loop() {
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	// Configure connection settings
-	// int local[] = {21,0,0,102};
-	// int localport = 8888;
-	// int remote[] = {21,0,0,2};
-	// int remoteport = 8889;
-	// int subnet[] = {255,255,255,0};
-	//04:e9:e5:14:31:31
+	int local[] = {21,0,0,102};
+	int localport = 8888;
+	int remote[] = {21,0,0,2};
+	int remoteport = 8889;
+	int subnet[] = {255,255,255,0};
 
 	// Initialize GAINSEthernet object and print connection information
-	// GAINSEthernet GE(local, remote, subnet, localport, remoteport);
-	// GE.info();
-	// Serial.printf("========================================================================\n");
+	GAINSEthernet GE(local, remote, subnet, localport, remoteport);
+	GE.info();
+	Serial.printf("========================================================================\n");
 
 	// Save to SD card
 	SDRW SD;
@@ -162,32 +161,26 @@ void loop() {
 		// Set the time at beginning of sampling
 		t1 = (millis()/1000.0) - t0;
 
+		contact = GE.read();
+
 		if (contact == true)
 		{
 			// Set the measurement vector, if ground contact is non-zero
-        	z_n[0] = 0;
-        	z_n[1] = 0;
-        	z_n[2] = 0;
-        	z_n[3] = 0;
-        	z_n[4] = 0;
-        	z_n[5] = 0;
-
-			// Set the H matrix as if we don't have a ground contact, but if contact set true
-        	KF.set_h(true);
+        	GE.get_ground_update(z_n);
 		}
 		else
 		{
-			// Set the measurement vector, if ground contact is non-zero
+			// Set the measurement vector, if ground contact is zero
         	z_n[0] = 0;
         	z_n[1] = 0;
         	z_n[2] = 0;
         	z_n[3] = 0;
         	z_n[4] = 0;
         	z_n[5] = 0;
-
-			// Set the H matrix as if we don't have a ground contact, but if contact set true
-        	KF.set_h(false);
 		}
+
+		// Set the H matrix as if we don't have a ground contact, but if contact set true
+		KF.set_h(contact);
 
         // Set the deterministic input vector, if thrusting is non-zero
 		if (thrusting == true)
