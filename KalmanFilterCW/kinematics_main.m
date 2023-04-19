@@ -125,10 +125,42 @@ ylabel("X [m]");
 
 figure;
 hold on
+plot(t, stateF(:,2))
+hold off
+title("KF - Y Position [m]");
+xlabel("Time[s]");
+ylabel("Y [m]");
+
+figure;
+hold on
+plot(t, stateF(:,3))
+hold off
+title("KF - Z Position [m]");
+xlabel("Time[s]");
+ylabel("Z [m]");
+
+figure;
+hold on
 plot(t, stateF(:,4))
 hold off
 title("KF - X Velocity [m/s]");
 xlabel("Time[s]");
 ylabel("X Velocity [m/s]");
+
+figure;
+hold on
+plot(t, stateF(:,5))
+hold off
+title("KF - Y Velocity [m/s]");
+xlabel("Time[s]");
+ylabel("Y Velocity [m/s]");
+
+figure;
+hold on
+plot(t, stateF(:,6))
+hold off
+title("KF - Z Velocity [m/s]");
+xlabel("Time[s]");
+ylabel("Z Velocity [m/s]");
 
 toc
