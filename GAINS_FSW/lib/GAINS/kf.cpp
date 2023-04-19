@@ -15,13 +15,13 @@ Description : This file contains the Kalman Filter (KF) function definitions
 /*********************************************/
 
 // Initialization Constructor
-KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n, bool CW_or_k)
+KalmanFilter::KalmanFilter(int n_x_local, int n_u_local, int n_z_local, float* x_n_n_local, float* P_n_n_local, bool CW_or_k)
 {
     // Set the KF environment vars
-    KalmanFilter::CW_or_K = CW_or_K;
-    KalmanFilter::n_x = n_x;
-    KalmanFilter::n_u = n_u;
-    KalmanFilter::n_z = n_z;
+    KalmanFilter::CW_or_K = CW_or_k;
+    KalmanFilter::n_x = n_x_local;
+    KalmanFilter::n_u = n_u_local;
+    KalmanFilter::n_z = n_z_local;
 
     /*    Preallocate Matricies and Vectors    */
 
@@ -29,8 +29,8 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
     KalmanFilter::x_n_p_1_n = (float*)malloc((n_x * 1) * sizeof(float));                   // Current Predicted State vector
     KalmanFilter::P_n_p_1_n = (float*)malloc((n_x * n_x) * sizeof(float));                 // Current Predicted Uncertainty Matrix
 
-    KalmanFilter::P_n_n = P_n_n;                                                            // Estimate Uncertainty Matrix (must be defined outside of this class)
-    KalmanFilter::x_n_n = x_n_n;                                                            // Estimate State vector(must be defined outside of this class)
+    KalmanFilter::P_n_n = P_n_n_local;                                                      // Estimate Uncertainty Matrix (must be defined outside of this class)
+    KalmanFilter::x_n_n = x_n_n_local;                                                      // Estimate State vector(must be defined outside of this class)
 
     // Kalman Filter Matricies
     KalmanFilter::F = (float*)malloc((n_x * n_x) * sizeof(float));                          // State Transition Matrix
@@ -43,7 +43,7 @@ KalmanFilter::KalmanFilter(int n_x, int n_u, int n_z, float* x_n_n, float* P_n_n
     KalmanFilter::GammaT = (float*)malloc((n_x * n_x) * sizeof(float));                     // Gamma Matrix Transposed (No other name??)
 
     KalmanFilter::H = (float*)malloc((n_z * n_x) * sizeof(float));                          // Observation Matrix
-    KalmanFilter::HT = (float*)malloc((n_z * n_x) * sizeof(float));                         // Transposed Observation Matrix
+    KalmanFilter::HT = (float*)malloc((n_x * n_z) * sizeof(float));                         // Transposed Observation Matrix
     eye(KalmanFilter::H, n_z);                                                              // Define the H matrix as the identity for this application
 
     KalmanFilter::Q = (float*)malloc((n_x * n_x) * sizeof(float));                          // Process Noise Matrix
@@ -187,7 +187,7 @@ void KalmanFilter::predict_state()
     mul(F, x_n_n, FX_n_n, KalmanFilter::n_x, KalmanFilter::n_x, 1);
 
     // G*u_n
-    mul(G, KalmanFilter::u_n, GU_n, KalmanFilter::n_x, KalmanFilter::n_u, 1);
+    mul(KalmanFilter::G, KalmanFilter::u_n, GU_n, KalmanFilter::n_x, KalmanFilter::n_u, 1);
 
     //  x_n_p_1_n
     add(FX_n_n, GU_n, KalmanFilter::x_n_p_1_n, KalmanFilter::n_x);
@@ -196,7 +196,7 @@ void KalmanFilter::predict_state()
 void KalmanFilter::predict_uncertainty()
 {
     /*          Equation               */
-    /* P_n_p_1_n = F * P_n_n * F^T + Q */
+    /* P_n_p_1_n = F * P_n_n * F^T + Q s*/
 
     // Declare temp vars
     float FP_n_n[KalmanFilter::n_x*KalmanFilter::n_x];

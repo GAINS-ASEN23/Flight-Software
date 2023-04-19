@@ -222,7 +222,7 @@ void loop() {
         // Run the KF for sample period
         KF.KF_run(t1, t2, n);
 		Serial.printf("dt: %.12f t1: %.12f t2: %.12f\n", t2 - t1, t1, t2);
-	    Serial.printf("Thrust: %.4f - [ %.4f %.4f %.4f %.4f %.4f %.4f ] \n", u_n[0], x_n_n[0], x_n_n[1], x_n_n[2], x_n_n[3], x_n_n[4], x_n_n[5]);
+	    Serial.printf("Thrust: %.12f - [ %.12f %.12f %.12f %.12f %.12f %.12f ] \n", thrust_avg, x_n_n[0], x_n_n[1], x_n_n[2], x_n_n[3], x_n_n[4], x_n_n[5]);
 		SD.sampleSTATE(t1, x_n_n, thrust_avg, S.get_g());
 
 		// Set t0 equal to after the kf
