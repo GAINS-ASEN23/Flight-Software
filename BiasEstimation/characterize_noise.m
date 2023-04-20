@@ -26,21 +26,21 @@ raw_centered = raw_centered - mean(raw_centered);
 
 %% Noise characterization
 [R,POW] = snr(raw_centered);
-
+R = db2mag(R);
 y1 = zeros(1,L);
 y2 = awgn(y1,R,POW);
 
 %% Plotting
 figure;
+title("Reference Data")
 plot(raw_centered);
+lim = 0.06;
+ylim([-lim,lim]);
 
 figure;
+title("Generated Data")
 plot(y2);
+ylim([-lim,lim]);
 
 
-figure; 
-plot(f,P1) 
-title("Single-Sided Amplitude Spectrum of X(t)")
-xlabel("f (Hz)")
-ylabel("|P1(f)|")
 

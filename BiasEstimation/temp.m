@@ -1,6 +1,5 @@
 
 clc; close all; clear all;
-plotgraphs = false;
 
 %% Reference Temps
 ref1 = readmatrix(strcat('GAINS 8 Pos Test/temp/ref.csv'));
@@ -12,7 +11,6 @@ ref3(:,1) = -(0:length(ref3)-1).*60;
 
 ref = [flip(ref3);ref1];
 ref(:,1) = ref(:,1) + abs(ref(1,1));
-
 
 %% Oven Test
 d1 = readmatrix(strcat('GAINS 8 Pos Test/temp/accel.csv'));
@@ -38,8 +36,6 @@ state = readmatrix('GAINS 8 Pos Test/temp/state.csv');
 stateclean = [-state(2:10:end,1), state(2:10:end,3)];
 freezer = flip(stateclean);
 
-
-
 %% Organize Data
 raw = [freezer; oven];
 raw(:,1) = raw(:,1) + abs(raw(1,1));
@@ -59,27 +55,8 @@ yOc = polyval([pO(1), transition * -pO(1) ],xO);
 
 %% Fit Ref Data
 x = 0:2800-1;
-pR = polyfit(ref(:,1),ref(:,2), 3);
+pR = polyfit(ref(:,1),ref(:,2), 1);
 yR = polyval(pR,x);
-
-%% Plot Fits
-figure(2);
-title("Fitted Accelerations and Temperatures");
-hold on;
-grid on;
-xlim([0,ref(end,1)])
-yyaxis left;
-ylabel("Acceleration [g's]");
-% plot(raw(:,1), raw(:,2), 'b');
-plot(xF,yFc, 'b', LineWidth=2, LineStyle='-');
-plot(xO,yOc, 'r', LineWidth=2, LineStyle='-');
-
-yyaxis right;
-ylabel("Temperature [deg C]");
-plot(ref(:,1), ref(:,2), 'g', LineWidth=2);
-plot(x, yR, 'k', LineWidth=2);
-
-legend("Freezer Fit","Oven Fit","Reference Raw","Reference Fit", Location="north")
 
 %% Combine Freezer and Oven Fits to One Line
 C = [[xF;yFc]';[xO;yOc]'];
@@ -90,6 +67,28 @@ yC = polyval(pC,x);
 t = 0:0.1:60;
 p = polyfit(yR,yC,1);
 y = polyval(p,t);
+
+%% Plot Fits
+figure(2);
+title("Fitted Accelerations and Temperatures");
+hold on;
+grid on;
+xlim([0,ref(end,1)])
+yyaxis left;
+ylabel("Acceleration [g]");
+% plot(raw(:,1), raw(:,2), 'b');
+plot(xF,yFc, 'b', LineWidth=2, LineStyle='-');
+plot(xO,yOc, 'r', LineWidth=2, LineStyle='-');
+plot(x,yC, 'k',LineWidth=2);
+
+yyaxis right;
+ylabel("Temperature [deg C]");
+plot(ref(:,1), ref(:,2), 'g', LineWidth=2);
+plot(x, yR, 'k', LineWidth=2);
+
+legend("Freezer Accel. Fit","Oven Accel. Fit","Acceleration Fit","Temp. Raw","Temp. Fit", Location="north")
+xlabel("Time [sec]")
+
 
 %% Local Gravity
 g_sl = 9.80665;             % [m/s^2] Acceleration at sea level
@@ -105,6 +104,7 @@ CNClim = 0.013 * g; % Max accel under CNC test
 %% Make 0 Acceleration Correction at 20 deg C
 correction_shift = y(find(t==20));
 y = y - correction_shift;
+y = -y;
 
 correction_slope = (y(end) - y(1))/t(end);
 correction_bias = y(1);
@@ -113,20 +113,27 @@ fprintf("Correction Bias: %.8f  SF: %.8f \n", correction_bias, correction_slope)
 
 %% Plot Acceleration Correction
 figure(3);
-title("Acceleration Correction vs Temperature");
+title("Acceleration Bias Correction With Temperature");
 hold on;
 grid on;
 xlim([0,60]);
 ylim([-CNClim,CNClim])
 xlabel("Temperature [deg C]");
 ylabel("Acceleration [m/s^2]")
-text(20,0.075,strcat("Bias: ",num2str(correction_bias)))
-text(20,0.065,strcat("Scale Factor: ",num2str(correction_slope)))
-plot(t,y);
+text(20,0.075,strcat("Bias: ",num2str(correction_bias)),'FontSize',12)
+text(20,0.06,strcat("Scale Factor: ",num2str(correction_slope)),'FontSize',12)
+plot(t,y, LineWidth=2);
 
+scatter(25,0.00756,MarkerEdgeColor='r', Marker='o', MarkerFaceColor='r');
+text(8,0.015, "(25, 0.00756)",'FontSize',12,'Color','r');
+
+scatter(25,0.00082,MarkerEdgeColor='g', Marker='o', MarkerFaceColor='g');
+text(27,-0.005, "(25, 0.00082)",'FontSize',12,'Color','g');
+
+legend("Acceleration Correction","GAINS Bias", "Datasheet Bias", Location="south")
 
 %% Plot Raw Temperature and Acceleration
-raw = [flip(stateclean);d1(:,1:2)];
+raw = [flip(stateclean);oven(:,1:2)];
 raw(:,1) = raw(:,1) + abs(raw(1,1));
 
 figure(1);
@@ -136,13 +143,11 @@ title("Raw Temperature and Acceleration");
 xlabel("Time [sec]");
 xlim([0,2800]);
 yyaxis left;
-ylabel("Acceleration [g's]");
+ylabel("Acceleration [g]");
 plot(raw(:,1), raw(:,2), 'b');
 ylim([0.5,1.5]);
-
 
 yyaxis right;
 ylabel("Temperature [deg C]");
 plot(ref(:,1), ref(:,2), 'r', LineWidth=2);
 ylim([0,63]);
-

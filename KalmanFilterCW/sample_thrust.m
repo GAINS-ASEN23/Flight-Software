@@ -1,39 +1,41 @@
 function [noisy_accel, ideal_accel] = sample_thrust(dt)
-    % Returns accelerations in g
-
-    mass_themis = 128;     % Mass of the Themis Satellites [kg]
+    
+    g = 9.80665;             % [m/s^2] Acceleration at sea level
+    mass_themis = 126;     % Mass of the Themis Satellites [kg]
 
     % From characterize_noise.m
-    R = -22.651120111775210;
+    R = 0.073696013257492;
     POW = -41.157778297496290;
 
     %% Create Thrust Curve
-    start = 0:dt:20;
+    max_g = 0.138;
+
+    start = linspace(0,20,20/dt);
     val1 = zeros(size(start));
 
-    leadup = 20:dt:30;
-    val2 = -0.4*(20-leadup);
+    leadup = linspace(20,30,10/dt);
+    val2 = -(20*max_g/10)+leadup*max_g/10;
 
-    peak = 30:dt:83;
-    val3 = val2(end)*ones(size(peak));
+    peak = linspace(30,83,53/dt);
+    val3 = max_g*ones(size(peak));
 
-    leadout = 83:dt:93;
-    val4 = 0.4*(93-leadout);
+    leadout = linspace(83,93,10/dt);
+    val4 = (93*max_g/10)-leadout*max_g/10;
 
-    ending = 93:dt:113;
+    ending = linspace(93,113,20/dt);
     val5 = zeros(size(ending));
+
+    %% g to m/s^2
+
+%     val1 = val1 .* g;
+%     val2 = val2 .* g;
+%     val3 = val3 .* g;
+%     val4 = val4 .* g;
+%     val5 = val5 .* g;
+
 
 
     %% Add white noise
-%     sn_white1 = awgn(val1,5);
-%     sn_white2(1,1) = sn_white1(end);
-%     sn_white2(1,2:size(val2,2)) = awgn(val2(2:end),5);
-%     sn_white3(1,1) = sn_white2(end);
-%     sn_white3(1,2:size(val3,2)) = awgn(val3(2:end),5);
-%     sn_white4(1,1) = sn_white3(end);
-%     sn_white4(1,2:size(val4,2)) = awgn(val4(2:end),5);
-%     sn_white5(1,1) = sn_white4(end);
-%     sn_white5(1,2:size(val5,2)) = awgn(val5(2:end),5);
 
     sn_white1 = awgn(val1,R,POW);
     sn_white2(1,1) = sn_white1(end);
@@ -46,33 +48,10 @@ function [noisy_accel, ideal_accel] = sample_thrust(dt)
     sn_white5(1,2:size(val5,2)) = awgn(val5(2:end),R,POW);
 
     %% Plot the Thrust
-    %{
-    figure;
-    plot(start,val1,'--b','LineWidth',1);
-    hold on; grid minor;
-
-    plot(leadup,val2,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(peak,val3,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(leadout,val4,'--b','LineWidth',1,'HandleVisibility','off');
-    plot(ending,val5,'--b','LineWidth',1,'HandleVisibility','off');
-
-    plot(start,sn_white1,'-r','LineWidth',1.5);
-    plot(leadup,sn_white2,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(peak,sn_white3,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(leadout,sn_white4,'-r','LineWidth',1.5,'HandleVisibility','off');
-    plot(ending,sn_white5,'-r','LineWidth',1.5,'HandleVisibility','off');
-    xlim([0 113]);
-    xlabel('Time [sec]');
-    ylabel('Thrust [N]'); 
-    title('Thrust Curve');
-    legend('Ideal Thrust Curve','Measured Thrust Curve');
-    %}
-
-
 
     time = [start'; leadup'; peak'; leadout'; ending'];
-    ideal_accel = [val1'; val2'; val3'; val4'; val5']./mass_themis;
-    noisy_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5']./mass_themis;
+    ideal_accel = [val1'; val2'; val3'; val4'; val5'];
+    noisy_accel = [sn_white1'; sn_white2'; sn_white3'; sn_white4'; sn_white5'];
 
     figure;
     hold on;
