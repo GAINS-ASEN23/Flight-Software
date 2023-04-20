@@ -3,7 +3,7 @@ clc; close all; clear all;
 syms n t sigma_ax sigma_ay sigma_az tau t1 t2 dt real;
 
 %% CW
-%{
+
 % A
 A = [0 0 0 1 0 0; 0 0 0 0 1 0; 0 0 0 0 0 1; 3*n^2 0 0 0 2*n 0; 0 0 0 -2*n 0 0; 0 0 -n^2 0 0 0];
 
@@ -41,7 +41,7 @@ Q_a(3,3) = sigma_az^2;
 Q = F*(B*Q_a*B')*F';
 Q_latex = latex(Q);
 Q_h = matlabFunction(Q);
-%}
+
 
 %% Kinematics
 % A

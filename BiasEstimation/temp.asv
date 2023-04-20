@@ -103,13 +103,10 @@ y = y * g;
 CNClim = 0.013 * g; % Max accel under CNC test
 
 %% Make 0 Acceleration Correction at 20 deg C
-correction_shift = y(find(t==20));
-y = y - correction_shift;
+correctionbias = y(find(t==20));
+y = y - correctionbias;
 
-correction_slope = (y(end) - y(1))/t(end);
-correction_bias = y(1);
-
-fprintf("Correction Bias: %.8f  SF: %.8f \n", correction_bias, correction_slope);
+fprintf("Correction Bias: %.8f  SF: %.8f \n", p(2) - correctionbias, p(1));
 
 %% Plot Acceleration Correction
 figure(3);
@@ -120,10 +117,7 @@ xlim([0,60]);
 ylim([-CNClim,CNClim])
 xlabel("Temperature [deg C]");
 ylabel("Acceleration [m/s^2]")
-text(20,0.075,strcat("Bias: ",num2str(correction_bias)))
-text(20,0.065,strcat("Scale Factor: ",num2str(correction_slope)))
 plot(t,y);
-
 
 %% Plot Raw Temperature and Acceleration
 raw = [flip(stateclean);d1(:,1:2)];
