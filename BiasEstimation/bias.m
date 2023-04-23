@@ -24,8 +24,11 @@ close all
 %% Measured Data
 accels = zeros(1,9);
 stds = zeros(1,9);
+figure;
+hold on;
 for i = 1:9
     d = readmatrix(strcat('GAINS 8 Pos Test/GAINS000', string(i), '/accel.csv'));
+    plot(d(:,1),d(:,2))
     accels(i) = mean(d(:,2));
     stds(i) = std(d(:,2));
 end
@@ -48,6 +51,8 @@ ref = g_conv.*cosd(ang);   %[g's]
 p = polyfit(ref,accels,1);
 x = linspace(-1,1);
 y = p(1)*x + p(2);
+figure;
+
 scatter(ref,accels, 20,'k')
 hold on
 % plot(x,y,'r',"LineWidth", 2)
@@ -73,7 +78,9 @@ x = accels;
 X = linspace(-1.1,1.1,100);
 
 P = polyfit(x,y,3);
+P2 = polyfit(x,y,1);
 YP = polyval(P,X);
+YP2 = polyval(P2,X);
 
 corrected_accels = polyval(P,accels);
 
@@ -83,7 +90,9 @@ grid on;
 title("3rd Degree Polynomial Fit");
 scatter(accels, ref);
 plot(X,YP);
-scatter(accels, corrected_accels)
+plot(X,YP2, 'k');
+
+%scatter(accels, corrected_accels)
 ylabel("Actual");
 xlabel("measured");
 

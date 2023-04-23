@@ -142,10 +142,8 @@ class GAINSEthernet{
         }
        
         // Function to set the return data vector for the ground
-        void send_ground_update(float t1, float* state, uint32_t systime, IPAddress IP, uint16_t port)
+        void send_ground_update(float t1, float* state,  IPAddress IP, uint16_t port)
         {
-            //float time = systime / 1000.0;
-            //Serial.printf("GE - time: %.4f\n",time);
 
             GAINS_TLM_PACKET tlm_send =  GAINS_TLM_PACKET_constructor(state[0], state[1], state[2], state[3], state[4], state[5], t1, 0, 1, 0, 0, 0, 0);
             size_t packet_size = sizeof(tlm_send);

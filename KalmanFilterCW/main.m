@@ -18,7 +18,7 @@ tic;
 %% Timestep
 
 N = 6794*2;                 % Number of data points
-dt = 0.1;                     % Time step [s]
+dt = 1;                     % Time step [s]
 t1 = 0;                     % Start time [s]
 t2 = N*dt + t1;             % End time [s]
 t = linspace(t1, t2, N);    % N times from t1 to t1
@@ -53,7 +53,7 @@ x_n_n_F = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
 p_n_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
-thrust_multiplier = 10;
+thrust_multiplier = 1;
 [thrust_accel_noisy,thrust_accel_ideal] = sample_thrust(dt);
 thrust_accel_noisy = thrust_accel_noisy .* thrust_multiplier;
 thrust_accel_ideal = thrust_accel_ideal .* thrust_multiplier;
@@ -155,7 +155,7 @@ deputy_state_F = chief_state + stateF;
 deputy_state_G = chief_state + stateG;
 
 %% Plot Results
-%{
+
 plot_1(stateF, t, "Deputy Deviations From Chief Orbit [Hill Frame]")
 plot_1_3D(stateF, "Deputy Deviations From Chief Orbit [Hill Frame]")
 % plot_1(chief_state, t, "Chief")
@@ -164,9 +164,9 @@ plot_1_3D(stateF, "Deputy Deviations From Chief Orbit [Hill Frame]")
 labels1 = ["Chief Vs Deputy Orbits", "Chief", "Deputy"];
 plot_2(chief_state, deputy_state_F, t, labels1)
 plot_2_3D(chief_state, deputy_state_F, labels1)
-%}
-plot_1(stateG-stateF, t, "Error in Flight Deviations from Ground Deviations [Hill] (10x Thrust)");
-labels2 = ["Ground vs. Flight Deviations from Chief Orbit [Hill] (10x Thrust)", "Ground", "Flight"];
+
+plot_1(stateG-stateF, t, "Difference in Flight Deviations from Ground Deviations [Hill Frame]");
+labels2 = ["Ground vs. Flight Deviations from Chief Orbit [Hill Frame]", "Ground", "Flight"];
 plot_2(stateG, stateF, t, labels2)
 
 
