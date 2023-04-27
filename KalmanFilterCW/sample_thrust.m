@@ -1,7 +1,12 @@
 function [noisy_accel, ideal_accel] = sample_thrust(dt)
+% Generates ideal and noisy sample thrust curve data
+% Modeled after Themis satellites
+% Noise modeled based on true accelerometer noise
+
+% Addison Woodard & Bennett Grow
+% April 2023
     
     g = 9.80665;             % [m/s^2] Acceleration at sea level
-    mass_themis = 126;     % Mass of the Themis Satellites [kg]
 
     % From characterize_noise.m
     R = 0.073696013257492;
@@ -24,15 +29,6 @@ function [noisy_accel, ideal_accel] = sample_thrust(dt)
 
     ending = linspace(93,113,20/dt);
     val5 = zeros(size(ending));
-
-    %% g to m/s^2
-
-%     val1 = val1 .* g;
-%     val2 = val2 .* g;
-%     val3 = val3 .* g;
-%     val4 = val4 .* g;
-%     val5 = val5 .* g;
-
 
 
     %% Add white noise
@@ -62,4 +58,5 @@ function [noisy_accel, ideal_accel] = sample_thrust(dt)
     plot(time, noisy_accel);
     plot(time, ideal_accel, LineWidth=1.5);
     legend('Measured Thrust Curve','Ideal Thrust Curve', Location='south');
+    
 end
