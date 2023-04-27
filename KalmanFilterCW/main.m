@@ -53,21 +53,16 @@ x_n_n_F = [x_0; y_0; 0; x_dot_0; y_dot_0; 0];
 p_n_n_F = [eye(3)*1000 zeros(3); zeros(3) eye(3)*(1)];
 
 %% Generate the Acceleration Measurement
-
+thrust_multiplier = 1;
 [thrust_accel_noisy,thrust_accel_ideal] = sample_thrust(dt);
+thrust_accel_noisy = thrust_accel_noisy .* thrust_multiplier;
+thrust_accel_ideal = thrust_accel_ideal .* thrust_multiplier;
+
 sigma_thrust = 1;
 fprintf("\nVelocity impluse: %0.4f Ideal, %0.4f Noisy\n", dt*sum(thrust_accel_ideal),dt*sum(thrust_accel_noisy))
 
-%% Run the Kalman Filter to Generate 'Truth Data'
-%{
-if isfile("GS_data.mat") == false
-    fprintf("Generating GS data...")
-    GS_data()
-    fprintf(" Done! \n")
-end
 
-load GS_data.mat
-%}
+
 %% Run the Kalman Filters
 stateG = [];
 stateF = [];
@@ -89,10 +84,6 @@ for i = 1:N
     % Control Input
     U_n_G = zeros(3,1);
     U_n_F = zeros(3,1);
-    
-%     % Unit vector pointing to deputy
-%     current_R = norm(chief_state(i,1:3));
-%     unit_pos = chief_state(i,1:3)./current_R;
 
     % Start thrusting one quater of the way through the orbit (N/4)
     if (i > N/4) && (j < length(thrust_accel_ideal))
@@ -166,7 +157,7 @@ deputy_state_F = chief_state + stateF;
 deputy_state_G = chief_state + stateG;
 
 %% Plot Results
-%{
+
 plot_1(stateF, t, "Deputy Deviations From Chief Orbit [Hill Frame]")
 plot_1_3D(stateF, "Deputy Deviations From Chief Orbit [Hill Frame]")
 % plot_1(chief_state, t, "Chief")
@@ -175,9 +166,9 @@ plot_1_3D(stateF, "Deputy Deviations From Chief Orbit [Hill Frame]")
 labels1 = ["Chief Vs Deputy Orbits", "Chief", "Deputy"];
 plot_2(chief_state, deputy_state_F, t, labels1)
 plot_2_3D(chief_state, deputy_state_F, labels1)
-%}
-plot_1(stateG-stateF, t, "Error in Flight Deviations from Ground Deviations [Hill]");
-labels2 = ["Ground vs. Flight Deviations from Chief Orbit [Hill]", "Ground", "Flight"];
+
+plot_1(stateG-stateF, t, "Difference in Flight Deviations from Ground Deviations [Hill Frame]");
+labels2 = ["Ground vs. Flight Deviations from Chief Orbit [Hill Frame]", "Ground", "Flight"];
 plot_2(stateG, stateF, t, labels2)
 
 

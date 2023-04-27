@@ -15,7 +15,7 @@
 #include <sensor.h>
 
 /*  OPERATING CONDITIONS  */
-#define DO_CW_OR_K 1		// 0 to use CW eqns, 1 to use kinematic eqns
+#define DO_CW_OR_K 0		// 0 to use CW eqns, 1 to use kinematic eqns
 
 void setup() {
 
@@ -41,7 +41,7 @@ void loop() {
 	digitalWrite(LED_BUILTIN, HIGH);
 
 	// Configure connection settings
-	int local[] = {21,0,0,102};
+	int local[] = {21,0,0,104};
 	int localport = 8888;
 	int remote[] = {21,0,0,2};
 	int remoteport = 8889;
@@ -155,6 +155,8 @@ void loop() {
 	// Get the initial time past delay
 	float t0 = millis()/1000.0;
 
+	int COUNT = 0;
+
     // LOOP
     while(true)
     {
@@ -217,6 +219,13 @@ void loop() {
 		Serial.printf("dt: %.12f t1: %.12f t2: %.12f\n", t2 - t1, t1, t2);
 	    Serial.printf("Thrust: %.12f - [ %.12f %.12f %.12f %.12f %.12f %.12f ] \n", thrust_avg, x_n_n[0], x_n_n[1], x_n_n[2], x_n_n[3], x_n_n[4], x_n_n[5]);
 		SD.sampleSTATE(t1, x_n_n, thrust_avg, S.get_g());
+
+
+		if (COUNT == 10){
+			GE.send_ground_update(t1, x_n_n, GE.getRemoteIP(), GE.getRemotePort());
+			COUNT = 0;
+		}
+		COUNT++;
 
 		// Set t0 equal to after the kf
 		t0 = millis()/1000.0;
