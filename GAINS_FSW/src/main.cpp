@@ -2,7 +2,7 @@
  ============================================================================
  Name        : main.cpp
  Author      : Bennett Grow, Kaylie Rick, Jason Popich
- Version     : 0.3
+ Version     : 0.4
  Copyright   : 
  Description : Main script to run all GAINS Flight Software
  ============================================================================
@@ -32,7 +32,6 @@ void setup() {
 void loop() {
 
 	Serial.printf("===============================  GAINS  ================================\n");
-	Serial.printf("General Atomics Inertial Navigation System\n");
 	Serial.printf("University of Colorado Boulder\n");
 	Serial.printf("Ann and H.J. Smead Dept. of Aerospace Engineering\n");
 	Serial.printf("Senior Design Project - Spring 2023\n");
