@@ -1,3 +1,5 @@
 *StartTrackerSample.csv
 *.mat
-
+*.vs
+*.git
+*.DS_Store
