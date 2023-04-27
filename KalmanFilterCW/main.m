@@ -61,6 +61,8 @@ thrust_accel_ideal = thrust_accel_ideal .* thrust_multiplier;
 sigma_thrust = 1;
 fprintf("\nVelocity impluse: %0.4f Ideal, %0.4f Noisy\n", dt*sum(thrust_accel_ideal),dt*sum(thrust_accel_noisy))
 
+
+
 %% Run the Kalman Filters
 stateG = [];
 stateF = [];
