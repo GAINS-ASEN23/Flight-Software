@@ -22,11 +22,16 @@ close all
 %% Measured Data
 accels = zeros(1,9);
 stds = zeros(1,9);
+dt = zeros(1,9);
+
 for i = 1:9
     d = readmatrix(strcat('testing_data/GAINS000', string(i), '/accel.csv'));
+    dt(i) = mean(diff(d(:,1)))*1E-6;
     accels(i) = mean(d(:,2));
     stds(i) = std(d(:,2));
 end
+
+F = 1/mean(dt);
 
 %% Truth Data
 % Local Gravity

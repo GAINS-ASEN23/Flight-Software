@@ -22,8 +22,8 @@ d2 = readmatrix(strcat('testing_data/temp/accel2.csv'));
 d2(:,1) = (d2(:,1)-d2(1,1))./1E6;
 d2(:,1) = -d2(:,1);
 
-dt = mean(diff(d1(:,1)));
-n = floor(0.01 / dt);
+dt_oven = mean(diff(d1(:,1)));
+n = floor(0.01 / dt_oven);
 n = 20;
 i = 1;
 j = 1;
@@ -38,6 +38,8 @@ end
 state = readmatrix('testing_data/temp/state.csv');
 stateclean = [-state(2:10:end,1), state(2:10:end,3)];
 freezer = flip(stateclean);
+dt_freezer = mean(diff(state(:,1)));
+
 
 %% Organize Data
 raw = [freezer; oven];
